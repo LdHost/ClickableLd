@@ -336,11 +336,11 @@ predicate:
 ;
 
 object:
-      iri	-> [yy.triple($1)]
-    | BlankNode	-> [yy.triple($1)]
-    | collection	-> [yy.triple($1[0].subject)].concat($1) // collection
-    | blankNodePropertyList	-> [yy.triple($1[0].subject)].concat($1) // blankNodePropertyList
-    | literal	-> [yy.triple($1)]
+      iri	-> [yy.finishTriple($1)]
+    | BlankNode	-> [yy.finishTriple($1)]
+    | collection	-> [yy.finishTriple($1[0].subject)].concat($1) // collection
+    | blankNodePropertyList	-> [yy.finishTriple($1[0].subject)].concat($1) // blankNodePropertyList
+    | literal	-> [yy.finishTriple($1)]
 ;
 
 literal:
