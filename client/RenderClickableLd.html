@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sites</title>
+    <style>
+      /*
+      body {
+      padding: 50px;
+      font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+      }
+      
+      a {
+          color: #00B7FF;
+      }
+      
+      table {
+          border-collapse:collapse;
+          text-align:center;
+      }
+      
+      caption {
+          caption-side:bottom;
+          font-weight:bold;
+          font-style:italic;
+          margin:4px;
+      }
+      
+      table,th, td {
+          border: 1px solid gray;
+      }
+      
+      th, td {
+          height: 24px;
+          padding:0 2em;
+          vertical-align:top;
+      }
+      
+      .repo { background-color: #ffd }
+      .commit { background-color: #dff }
+      .progress { background-color: #ddf }
+      .success { background-color: #dfd }
+      .error { background-color: #fdd }
+      .rowtitle { font-weight:bold; }
+      td { text-align: left; }
+      // th { background-image:url(table-shaded.png); }
+
+      td button {
+          font-size: 1ex;
+          padding: 0 0.5em;
+      }
+      */
+      .prefix {font-size: smaller;}
+      .base {font-size: smaller;}
+      .keyword {color: #737;}
+    </style>
+    <script src="./frontend-config.js"></script>
+    <script src="./frontend.js"></script>
+    <script src="../ClickableLd.js"></script>
+  </head>
+  <body>
+    <h1>Sites</h1>
+    <p>Now visiting <span id="page">-</span></p>
+    <div>
+      <div class="clickable">
+      </div>
+    </div>
+    <div>
+      <h2 style="float:left">Messages</h2><p style="float:left; padding-top: 1.3ex; padding-left: .5em;">(most recent first)</p><div style="clear:both"/>
+    </div>
+    <ol id="messages"></ol>
+  </body>
+</html>
