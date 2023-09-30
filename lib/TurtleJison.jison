@@ -339,7 +339,7 @@ object:
       iri	-> [yy.triple($1)]
     | BlankNode	-> [yy.triple($1)]
     | collection	-> [yy.triple($1[0].subject)].concat($1) // collection
-    | blankNodePropertyList	-> [yy.triple($1)].concat($1) // blankNodePropertyList
+    | blankNodePropertyList	-> [yy.triple($1[0].subject)].concat($1) // blankNodePropertyList
     | literal	-> [yy.triple($1)]
 ;
 
@@ -350,7 +350,11 @@ literal:
 ;
 
 blankNodePropertyList:
-      GT_LBRACKET predicateObjectList GT_RBRACKET	-> $2
+      GT_LBRACKET NEW_SUBJECT predicateObjectList GT_RBRACKET	-> yy.finishBlankNodePropertyList($3, $2)
+;
+
+NEW_SUBJECT:
+      -> yy.startBlankNodePropertyList();
 ;
 
 collection:
@@ -365,7 +369,7 @@ _Qobject_E_Star:
 collectionObject:
       iri	-> {node: $1, nested: []}
     | BlankNode	-> {node: $1, nested: []}
-    | collection	-> {node: $1[0].subject, nested: $1} // collection
+    | collection	-> yy.makeFirstRest($1) // collection
     | blankNodePropertyList	-> {node: $1[0].subject, nested: $1} // blankNodePropertyList
     | literal	-> {node: $1, nested: []}
 ;

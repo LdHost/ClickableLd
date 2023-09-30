@@ -13,7 +13,7 @@ PREFIX pre: <http://a.example/ns>
 <url1> a pre:Class1, pre:Class2;
   pre:p1 "cd", _:xy; pre:p2 <//b.example/u3>.
 
-(111 (222 333) 444)
-  <pre:p3> 'ef', 'gh'.
+(111 (222 333) 444 [pre:p3 [pre:p4 'p4']; pre:p5 555])
+  pre:p6 666.
 `);
 console.log(quads, locations);
