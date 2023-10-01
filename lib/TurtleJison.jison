@@ -70,66 +70,6 @@
   ];
 
   const absoluteIRI = /^[a-z][a-z0-9+.-]*:/i;
-
-
-  // Creates a literal with the given value and type
-  function createLiteral(value, type) {
-    return { value: value, type: type };
-  }
-
-  // Regular expression and replacement strings to escape strings
-  const stringEscapeReplacements = { '\\': '\\', "'": "'", '"': '"',
-                                   't': '\t', 'b': '\b', 'n': '\n', 'r': '\r', 'f': '\f' },
-      semactEscapeReplacements = { '\\': '\\', '%': '%' },
-      pnameEscapeReplacements = {
-        '\\': '\\', "'": "'", '"': '"',
-        'n': '\n', 'r': '\r', 't': '\t', 'f': '\f', 'b': '\b',
-        '_': '_', '~': '~', '.': '.', '-': '-', '!': '!', '$': '$', '&': '&',
-        '(': '(', ')': ')', '*': '*', '+': '+', ',': ',', ';': ';', '=': '=',
-        '/': '/', '?': '?', '#': '#', '@': '@', '%': '%',
-      };
-
-
-  // Translates string escape codes in the string into their textual equivalent
-  function unescapeString(string, trimLength) {
-    string = string.substring(trimLength, string.length - trimLength);
-    return unescapeText(string, stringEscapeReplacements);
-  }
-
-  function unescapeLangString(string, trimLength) {
-    const at = string.lastIndexOf("@");
-    const lang = string.substr(at);
-    string = string.substr(0, at);
-    const u = unescapeString(string, trimLength);
-    return extend(u, { language: lowercase(lang.substr(1)) });
-  }
-
-  function unescapeText (string, replacements) {
-    const regex = /\\u([a-fA-F0-9]{4})|\\U([a-fA-F0-9]{8})|\\(.)/g;
-    try {
-      string = string.replace(regex, function (sequence, unicode4, unicode8, escapedChar) {
-        let charCode;
-        if (unicode4) {
-          charCode = parseInt(unicode4, 16);
-          if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
-          return String.fromCharCode(charCode);
-        }
-        else if (unicode8) {
-          charCode = parseInt(unicode8, 16);
-          if (isNaN(charCode)) throw new Error(); // can never happen (regex), but helps performance
-          if (charCode < 0xFFFF) return String.fromCharCode(charCode);
-          return String.fromCharCode(0xD800 + ((charCode -= 0x10000) >> 10), 0xDC00 + (charCode & 0x3FF));
-        }
-        else {
-          const replacement = replacements[escapedChar];
-          if (!replacement) throw new Error("no replacement found for '" + escapedChar + "'");
-          return replacement;
-        }
-      });
-      return string;
-    }
-    catch (error) { console.warn(error); return ''; }
-  }
 %}
 
 /* lexical grammar */
@@ -188,7 +128,7 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
   };
   yy.addWhitespace({type: "ws", origText: yytext});
 }
-{COMMENT}           {
+{COMMENT}           {debugger; // console.log("ASDF", yytext)
   // space eaten by whitespace and comments
   if (yy.skipped.last_line === yylloc.first_line &&
       yy.skipped.last_column === yylloc.first_column) {
@@ -199,36 +139,36 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
     // follows something else
     yy.skipped = yylloc
   };
-  yy.addWhitespace(yytext);
+  yy.addWhitespace({type: "comment", origText: yytext});
 }
-"."                     return 'GT_DOT';
-";"                     return 'GT_SEMI';
-","                     return 'GT_COMMA';
-"["                     return 'GT_LBRACKET';
-"]"                     return 'GT_RBRACKET';
-"("                     return 'GT_LPAREN';
-")"                     return 'GT_RPAREN';
-"^^"                    return 'GT_DTYPE';
-"true"                  return 'IT_true';
-"false"                 return 'IT_false';
-{SPARQL_PREFIX}         return 'SPARQL_PREFIX';
-{SPARQL_BASE}           return 'SPARQL_BASE';
-"@base"                 return 'BASE';
-"@prefix"               return 'PREFIX';
-{IRIREF}                const unesc = unescapeText(yytext.substring(1, yytext.length - 1), {}); yytext = { "type": "relativeUrl", "value": yy._base === null || absoluteIRI.test(unesc) ? unesc : yy._resolveIRI(unesc) , "origText": yytext }; return 'IRIREF';
-{PNAME_LN}              return 'PNAME_LN';
-{PNAME_NS}              return 'PNAME_NS';
-{BLANK_NODE_LABEL}      return 'BLANK_NODE_LABEL';
-{LANGTAG}               return 'LANGTAG';
-{INTEGER}               return 'INTEGER';
-{DECIMAL}               return 'DECIMAL';
-{DOUBLE}                return 'DOUBLE';
-{STRING_LITERAL1}       return 'STRING_LITERAL1';
-{STRING_LITERAL2}       return 'STRING_LITERAL2';
-{STRING_LITERAL_LONG1}  return 'STRING_LITERAL_LONG1';
-{STRING_LITERAL_LONG2}  return 'STRING_LITERAL_LONG2';
-{ANON}                  return 'ANON';
-"a"                     return 'RDF_TYPE';
+"."                     yytext = { type: "token", origText: yytext }; return 'GT_DOT';
+";"                     yytext = { type: "token", origText: yytext }; return 'GT_SEMI';
+","                     yytext = { type: "token", origText: yytext }; return 'GT_COMMA';
+"["                     yytext = { type: "token", origText: yytext }; return 'GT_LBRACKET';
+"]"                     yytext = { type: "token", origText: yytext }; return 'GT_RBRACKET';
+"("                     yytext = { type: "token", origText: yytext }; return 'GT_LPAREN';
+")"                     yytext = { type: "token", origText: yytext }; return 'GT_RPAREN';
+"^^"                    yytext = { type: "token", origText: yytext }; return 'GT_DTYPE';
+"true"                  yytext = { type: "boolean", origText: yytext }; return 'IT_true';
+"false"                 yytext = { type: "boolean", origText: yytext }; return 'IT_false';
+{SPARQL_PREFIX}         yytext = { type: "KEYWORD", origText: yytext }; return 'SPARQL_PREFIX';
+{SPARQL_BASE}           yytext = { type: "KEYWORD", origText: yytext }; return 'SPARQL_BASE';
+"@base"                 yytext = { type: "KEYWORD", origText: yytext }; return 'BASE';
+"@prefix"               yytext = { type: "KEYWORD", origText: yytext }; return 'PREFIX';
+{IRIREF}                yytext = yy.createRelativeIri(yytext); return 'IRIREF';
+{PNAME_LN}              yytext = yy.parsePName(yytext); return 'PNAME_LN';
+{PNAME_NS}              yytext = yy.parsePrefix(yytext); return 'PNAME_NS';
+{BLANK_NODE_LABEL}      yytext = { type: "token", origText: yytext }; return 'BLANK_NODE_LABEL';
+{LANGTAG}               yytext = { type: "LANGTAG", value: yytext.substring(1), origText: yytext }; return 'LANGTAG';
+{INTEGER}               yytext = { type: "INTEGER", value: yytext, origText: yytext }; return 'INTEGER';
+{DECIMAL}               yytext = { type: "DECIMAL", value: yytext, origText: yytext }; return 'DECIMAL';
+{DOUBLE}                yytext = { type: "DOUBLE",  value: yytext, origText: yytext }; return 'DOUBLE';
+{STRING_LITERAL1}       yytext = { type: "STRING_LITERAL1", value: yy.unescapeString(yytext, 1), origText: yytext }; return 'STRING_LITERAL1';
+{STRING_LITERAL2}       yytext = { type: "STRING_LITERAL2", value: yy.unescapeString(yytext, 1), origText: yytext }; return 'STRING_LITERAL2';
+{STRING_LITERAL_LONG1}  yytext = { type: "STRING_LITERAL_LONG1", value: yy.unescapeString(yytext, 3), origText: yytext }; return 'STRING_LITERAL_LONG1';
+{STRING_LITERAL_LONG2}  yytext = { type: "STRING_LITERAL_LONG2", value: yy.unescapeString(yytext, 3), origText: yytext }; return 'STRING_LITERAL_LONG2';
+{ANON}                  yytext = { type: "ANON", origText: yytext }; return 'ANON';
+"a"                     yytext = { type: "keyword", origText: yytext }; return 'RDF_TYPE';
 <<EOF>>                 return 'EOF';
 [a-zA-Z0-9_-]+          return 'unexpected word "'+yytext+'"';
 .                       return 'invalid character '+yytext;
@@ -257,7 +197,7 @@ _Qstatement_E_Star:
 
 statement:
       directive	
-    | triples GT_DOT	
+    | triples WS GT_DOT	-> $1.concat($2, $3, yy.getWhitespace());
 ;
 
 directive:
@@ -282,8 +222,8 @@ base:
 
 sparqlPrefix:
       SPARQL_PREFIX WS PNAME_NS WS IRIREF	{
-        yy._prefixes[$3.slice(0, -1)] = $5.value;
-        $$ = [{ "type": "sparqlPrefix", ws1: $2, prefix: $3, ws2: $4, namespace: $5 }].concat(yy.getWhitespace());
+        yy._prefixes[$3.value] = $5.value;
+        $$ = [{ "type": "sparqlPrefix", keyword: $1, ws1: $2, prefix: $3, ws2: $4, namespace: $5 }].concat(yy.getWhitespace());
       }
 ;
 
@@ -300,30 +240,30 @@ triples:
 ;
 
 _QpredicateObjectList_E_Opt:
-      -> []
-    | predicateObjectList	
+      -> yy.getWhitespace()
+    | predicateObjectList	-> $1.concat(yy.getWhitespace());
 ;
 
 predicateObjectList:
-      verb WS objectList WS _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star	-> { type: "verb_objectList", verb: $1, ws1: $2, objectList: $3.concat($4, $5) } // verb objectList _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star
+      verb WS objectList WS _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star	-> [{ type: "verb_objectList", verb: $1, ws1: $2, objectList: $3.concat($4) }].concat($5).concat(yy.getWhitespace()) // verb objectList _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star
 ;
 
 _O_Qverb_E_S_QobjectList_E_C:
-      verb objectList	-> $2
+      WS verb WS objectList	-> $1.concat([{ type: "verb_objectList", verb: $2, ws1: $3, objectList: $4 }], yy.getWhitespace())
 ;
 
 _Q_O_Qverb_E_S_QobjectList_E_C_E_Opt:
-      -> []
-    | _O_Qverb_E_S_QobjectList_E_C	
+      -> yy.getWhitespace()
+    | _O_Qverb_E_S_QobjectList_E_C	->$1.concat(yy.getWhitespace())
 ;
 
 _O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C:
-      GT_SEMI _Q_O_Qverb_E_S_QobjectList_E_C_E_Opt	-> $2
+      GT_SEMI _Q_O_Qverb_E_S_QobjectList_E_C_E_Opt	-> [$1].concat($2, yy.getWhitespace())
 ;
 
 _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star:
-      -> []
-    | _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star _O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C	-> $1.concat($2) // Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star _O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C
+      -> yy.getWhitespace()
+    | _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star _O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C	-> $1.concat($2, yy.getWhitespace()) // Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star _O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C
 ;
 
 objectList:
@@ -331,7 +271,7 @@ objectList:
 ;
 
 _O_QGT_COMMA_E_S_Qobject_E_C:
-      GT_COMMA WS object	-> $2.concat($3)
+      GT_COMMA WS object	-> [$1].concat($2, $3, yy.getWhitespace())
 ;
 
 _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star:
@@ -394,37 +334,37 @@ collectionObject:
 ;
 
 NumericLiteral:
-      INTEGER	-> yy.createLiteral($1, XSD_INTEGER)
-    | DECIMAL	-> yy.createLiteral($1, XSD_DECIMAL)
-    | DOUBLE	-> yy.createLiteral($1, XSD_DOUBLE)
+      INTEGER	-> yy.createTypedLiteral($1, XSD_INTEGER)
+    | DECIMAL	-> yy.createTypedLiteral($1, XSD_DECIMAL)
+    | DOUBLE	-> yy.createTypedLiteral($1, XSD_DOUBLE)
 ;
 
 RDFLiteral:
-      String _Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C_E_Opt	-> yy.createLiteral($1, $2)
+      String WS _Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C_E_Opt	-> yy.createParsedLiteral($3.type, $1, $2, $3.attrs)
 ;
 
 _O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C:
-      LANGTAG	
-    | GT_DTYPE iri	
+      LANGTAG	-> { type: "langTagLiteral", attrs: { language: $1 } }
+    | GT_DTYPE WS iri	-> { type: "datatypedLiteral", attrs: { datatype: { type: "ParsedDatatype", value: $3.value, token: $1, ws1: $2, iri: $3 } } }
 ;
 
 _Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C_E_Opt:
-      -> null
+      -> { type: "simpleLiteral", attrs: {} }
     | _O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C	
 ;
 
 BooleanLiteral:
-      IT_true	-> yy.createLiteral($1, XSD_BOOLEAN)
-    | IT_false	-> yy.createLiteral($1, XSD_BOOLEAN)
+      IT_true	-> yy.createTypedLiteral($1, XSD_BOOLEAN)
+    | IT_false	-> yy.createTypedLiteral($1, XSD_BOOLEAN)
 ;
 
 
 
 String:
-      STRING_LITERAL1	-> { type: "STRING_LITERAL1", value: unescapeString($1, 1), origText: $1 }
-    | STRING_LITERAL2	-> { type: "STRING_LITERAL2", value: unescapeString($1, 1), origText: $1 }
-    | STRING_LITERAL_LONG1	-> { type: "STRING_LITERAL_LONG1", value: unescapeString($1, 3), origText: $1 }
-    | STRING_LITERAL_LONG2	-> { type: "STRING_LITERAL_LONG1", value: unescapeString($1, 3), origText: $1 }
+      STRING_LITERAL1	
+    | STRING_LITERAL2	
+    | STRING_LITERAL_LONG1	
+    | STRING_LITERAL_LONG2	
 ;
 
 iri:
@@ -433,17 +373,8 @@ iri:
 ;
 
 PrefixedName:
-      PNAME_LN	{
-        const namePos1 = $1.indexOf(':');
-        const prefix = $1.substring(0, namePos1);
-        const localName = $1.substring(namePos1 + 1);
-        const unescaped = unescapeText(localName, pnameEscapeReplacements);
-        const value = yy.expandPrefix(prefix) + unescaped;
-        $$ = { "type": "pname", "value": value, "prefix": { "type": "prefix", "value": prefix, "origText": prefix + ":"}, "localName": { "type": "localName", "value": unescaped, "origText": localName} }
-      }
-    | PNAME_NS	{
-        $$ = yy.expandPrefix($1.substr(0, $1.length - 1), yy);
-      }
+      PNAME_LN	
+    | PNAME_NS	
 ;
 
 BlankNode:

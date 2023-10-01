@@ -7,73 +7,28 @@ const parser = new TurtleParser({baseIRI, factory})
 
 console.log('--------------------');
 const [locations, quads] = parser.parse(`
+PREFIX pre: <http://a.example/ns#>
 
-PREFIX pre: <http://a.example/ns>
+ <a> <b> [ <c> "chat" ^^ pre:dt, 444 , "chat" @en ] .
 
-<url1> a pre:Class1, pre:Class2;
-  pre:p1 "cd", _:xy; pre:p2 <//b.example/u3>.
-
+#<url1> a pre:Class1 , pre:Class2 ; #here
+#  pre:p1 "cd" , _:xy ;
+#  pre:p2 <//b.example/u3> .
 #(111 (222 333) 444 [pre:p3 [pre:p4 'p4']; pre:p5 555])
 #  pre:p6 666 .
 `);
-// console.log(quads);
+console.log(JSON.stringify(quads, null, 2));
+console.log(origText(locations).join(''));
+console.log('--------------------');
 console.log(JSON.stringify(locations, null, 2));
 
-const X = {
-  "statementList": [
-    { "type": "ws", "origText": "\n\n" },
-    { "type": "sparqlPrefix", "ws1": [ { "tpe": "ws", "origText": " " } ], "prefix": "pre", "ws2": [ { "tpe": "ws", "origText": " " } ], "namespace": { "type": "relativeUrl", "value": "http://a.example/ns" , "origText": "<http://a.example/ns>"} }, { "type": "ws", "origText": "\n\n" },
-
-    { "type": "subject_predicateObjectList", "subject": { "type": "relativeUrl", "value": "http://localhost/some/url1", "origText": "<url1>" }, "ws1": [ { "type": "ws", "origText": " " } ], "predicateObjectList": [
-      { "type": "verb_objectList", "verb": { "type": "a", "origText": "a" }, "ws1": [ { "tpe": "ws", "origText": " " } ], "objectList": [ { "type": "ws", "origText": " " }, { "type": "pname", "value": "http://www.w3.org/ns/dcat#Resource", "prefix": { "type": "prefix", "value": "dcat", "origText": "dcat:"}, "localName": { "type": "localName", "value": "Resource", "origText": "Resource"} }, { "type": "punctuation", "origText": "," }, { "type": "ws", "origText": " " }, { "type": "pname", "value": "http://www.w3.org/ns/dcat#Catalog", "prefix": { "type": "prefix", "value": "dcat", "origText": "dcat:"}, "localName": { "type": "localName", "value": "Catalog", "origText": "Catalog"} } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://www.w3.org/2000/01/rdf-schema#label", "prefix": { "type": "prefix", "value": "rdfs", "origText": "rdfs:"}, "localName": { "type": "localName", "value": "label", "origText": "label"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "literal", "string": { "type": "string_literal1", "value": "rajaramz-fdp registry", "origtext": "rajaramz-fdp registry" } } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://purl.org/dc/terms/title", "prefix": { "type": "prefix", "value": "dcterms", "origText": "dcterms:"}, "localName": { "type": "localName", "value": "title", "origText": "title"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "literal", "string": { "type": "string_literal1", "value": "rajaramz-fdp registry", "origtext": "rajaramz-fdp registry" } } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://purl.org/dc/terms/hasVersion", "prefix": { "type": "prefix", "value": "dcterms", "origText": "dcterms:"}, "localName": { "type": "localName", "value": "hasVersion", "origText": "hasVersion"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "literal", "string": { "type": "string_literal1", "value": "1", "origtext": "1" } } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://purl.org/dc/terms/license", "prefix": { "type": "prefix", "value": "dcterms", "origText": "dcterms:"}, "localName": { "type": "localName", "value": "license", "origText": "license"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "relativeUrl", "value": "http://rdflicense.appspot.com/rdflicense/cc-by-nc-nd3.0", "origText": "&lt;http://rdflicense.appspot.com/rdflicense/cc-by-nc-nd3.0&gt;" } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://purl.org/dc/terms/description", "prefix": { "type": "prefix", "value": "dcterms", "origText": "dcterms:"}, "localName": { "type": "localName", "value": "description", "origText": "description"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "literal", "string": { "type": "string_literal1", "value": "rajaramz-fdp registry catalog", "origtext": "rajaramz-fdp registry catalog" } } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://purl.org/dc/terms/language", "prefix": { "type": "prefix", "value": "dcterms", "origText": "dcterms:"}, "localName": { "type": "localName", "value": "language", "origText": "language"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "relativeUrl", "value": "http://id.loc.gov/vocabulary/iso639-1/en", "origText": "&lt;http://id.loc.gov/vocabulary/iso639-1/en&gt;" } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://purl.org/dc/terms/accessRights", "prefix": { "type": "prefix", "value": "dcterms", "origText": "dcterms:"}, "localName": { "type": "localName", "value": "accessRights", "origText": "accessRights"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "relativeUrl", "value": "#catalog_accessRights", "origText": "&lt;catalog#accessRights&gt;" } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://purl.org/dc/terms/publisher", "prefix": { "type": "prefix", "value": "dcterms", "origText": "dcterms:"}, "localName": { "type": "localName", "value": "publisher", "origText": "publisher"} }, "objectList": [ { "type": "blankNodePropertyList", "predicateObjectList": [ { "type": "verb_objectList", "verb": { "type": "a", "origText": "a" }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "pname", "value": "http://xmlns.com/foaf/0.1/Agent", "prefix": { "type": "prefix", "value": "foaf", "origText": "foaf:"}, "localName": { "type": "localName", "value": "Agent", "origText": "Agent"} } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": " " }, { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://xmlns.com/foaf/0.1/name", "prefix": { "type": "prefix", "value": "foaf", "origText": "foaf:"}, "localName": { "type": "localName", "value": "name", "origText": "name"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "literal", "string": { "type": "string_literal1", "value": "Rajaram Kaliyaperumal", "origtext": "Rajaram Kaliyaperumal" } } ] } ] } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://purl.org/dc/terms/isPartOf", "prefix": { "type": "prefix", "value": "dcterms", "origText": "dcterms:"}, "localName": { "type": "localName", "value": "isPartOf", "origText": "isPartOf"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "relativeUrl", "value": "repository", "origText": "&lt;repository&gt;" } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://www.w3.org/ns/dcat#dataset", "prefix": { "type": "prefix", "value": "dcat", "origText": "dcat:"}, "localName": { "type": "localName", "value": "dataset", "origText": "dataset"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "relativeUrl", "value": "dataset", "origText": "&lt;dataset&gt;" } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "https://w3id.org/fdp/fdp-o#metadataIssued", "prefix": { "type": "prefix", "value": "fdp-o", "origText": "fdp-o:"}, "localName": { "type": "localName", "value": "metadataIssued", "origText": "metadataIssued"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "literal", "string": { "type": "string_literal1", "value": "2022-08-31T08:52:02.797608391Z", "origtext": "2022-08-31T08:52:02.797608391Z" }, "datatypeMarker": { "origText": "^^" }, "datatype": { "type": "pname", "value": "http://www.w3.org/2001/XMLSchema#dateTime", "prefix": { "type": "prefix", "value": "xsd", "origText": "xsd:"}, "localName": { "type": "localName", "value": "dateTime", "origText": "dateTime"} } } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "https://w3id.org/fdp/fdp-o#metadataModified", "prefix": { "type": "prefix", "value": "fdp-o", "origText": "fdp-o:"}, "localName": { "type": "localName", "value": "metadataModified", "origText": "metadataModified"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "literal", "string": { "type": "string_literal1", "value": "2022-09-21T14:25:59.866785798Z", "origtext": "2022-09-21T14:25:59.866785798Z" }, "datatypeMarker": "^^", "datatype": { "type": "pname", "value": "http://www.w3.org/2001/XMLSchema#dateTime", "prefix": { "type": "prefix", "value": "xsd", "origText": "xsd:"}, "localName": { "type": "localName", "value": "dateTime", "origText": "dateTime"} } } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "https://w3id.org/fdp/fdp-o#metadataIdentifier", "prefix": { "type": "prefix", "value": "fdp-o", "origText": "fdp-o:"}, "localName": { "type": "localName", "value": "metadataIdentifier", "origText": "metadataIdentifier"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "relativeUrl", "value": "#catalog_identifier", "origText": "&lt;catalog#identifier&gt;" } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-    
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://www.w3.org/ns/dcat#themeTaxonomy", "prefix": { "type": "prefix", "value": "dcat", "origText": "dcat:"}, "localName": { "type": "localName", "value": "themeTaxonomy", "origText": "themeTaxonomy"} }, "objectList": [ { "type": "objectList", "list": [
-        { "type": "ws", "origText": "\n    " },
-        { "type": "pname", "value": "http://purl.obolibrary.org/obo/NCIT_C47846", "prefix": { "type": "prefix", "value": "obo", "origText": "obo:"}, "localName": { "type": "localName", "value": "NCIT_C47846", "origText": "NCIT_C47846"} }, { "type": "punctuation", "origText": "," }, { "type": "ws", "origText": "\n    " },
-        { "type": "pname", "value": "http://purl.obolibrary.org/obo/HP_0000708", "prefix": { "type": "prefix", "value": "obo", "origText": "obo:"}, "localName": { "type": "localName", "value": "HP_0000708", "origText": "HP_0000708"} }, { "type": "punctuation", "origText": "," }, { "type": "ws", "origText": "\n    " },
-        { "type": "pname", "value": "http://purl.obolibrary.org/obo/HP_0000750", "prefix": { "type": "prefix", "value": "obo", "origText": "obo:"}, "localName": { "type": "localName", "value": "HP_0000750", "origText": "HP_0000750"} }, { "type": "punctuation", "origText": "," }, { "type": "ws", "origText": " " },
-        { "type": "pname", "value": "http://www.orpha.net/ORDO/Orphanet_98895", "prefix": { "type": "prefix", "value": "ORDO", "origText": "ORDO:"}, "localName": { "type": "localName", "value": "Orphanet_98895", "origText": "Orphanet_98895"} }, { "type": "punctuation", "origText": "," }, { "type": "ws", "origText": "\n    " },
-        { "type": "pname", "value": "http://www.orpha.net/ORDO/Orphanet_98896", "prefix": { "type": "prefix", "value": "ORDO", "origText": "ORDO:"}, "localName": { "type": "localName", "value": "Orphanet_98896", "origText": "Orphanet_98896"} }, { "type": "ws", "origText": " " }
-      ] } ] },
-      { "type": "PERIOD", "origText": "." }, { "type": "ws", "origText": "\n\n" }
-    ] },
-    
-    { "type": "subject_predicateObjectList", "subject": { "type": "relativeUrl", "value": "catalog#identifier", "origText": "<catalog#identifier>" }, "predicateObjectList": [
-      { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "a", "origText": "a" }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "relativeUrl", "value": "http://purl.org/spar/datacite/Identifier", "origText": "&lt;http://purl.org/spar/datacite/Identifier&gt;" } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://purl.org/dc/terms/identifier", "prefix": { "type": "prefix", "value": "dcterms", "origText": "dcterms:"}, "localName": { "type": "localName", "value": "identifier", "origText": "identifier"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "literal", "string": { "type": "string_literal1", "value": "catalog", "origtext": "catalog" } }, { "type": "ws", "origText": " " } ] },
-      { "type": "PERIOD", "origText": "." }, { "type": "ws", "origText": "\n\n" }
-    ] },
-
-    { "type": "subject_predicateObjectList", "subject": { "type": "relativeUrl", "value": "catalog#identifier", "origText": "<catalog#accessRights>" }, "predicateObjectList": [
-      { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "a", "origText": "a" }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "pname", "value": "http://purl.org/dc/terms/RightsStatement", "prefix": { "type": "prefix", "value": "dcterms", "origText": "dcterms:"}, "localName": { "type": "localName", "value": "RightsStatement", "origText": "RightsStatement"} } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://purl.org/dc/terms/description", "prefix": { "type": "prefix", "value": "dcterms", "origText": "dcterms:"}, "localName": { "type": "localName", "value": "description", "origText": "description"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "literal", "string": { "type": "string_literal1", "value": "This resource has no access restriction", "origtext": "This resource has no access restriction" } } ] }, { "type": "ws", "origText": " " },
-      { "type": "PERIOD", "origText": "." }, { "type": "ws", "origText": "\n\n" }
-    ] },
-    
-    { "type": "subject_predicateObjectList", "subject": { "type": "relativeUrl", "value": "http://178.63.49.197:8050/dataset/", "origText": "<http://178.63.49.197:8050/dataset/>" }, "predicateObjectList": [
-      { "type": "ws", "origText": " " }, { "type": "a", "origText": "a" }, { "type": "ws", "origText": " " }, { "type": "pname", "value": "http://www.w3.org/ns/ldp#DirectContainer", "prefix": { "type": "prefix", "value": "ldp", "origText": "ldp:"}, "localName": { "type": "localName", "value": "DirectContainer", "origText": "DirectContainer"} }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://purl.org/dc/terms/title", "prefix": { "type": "prefix", "value": "dcterms", "origText": "dcterms:"}, "localName": { "type": "localName", "value": "title", "origText": "title"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "literal", "string": { "type": "string_literal1", "value": "Datasets", "origtext": "Datasets" } } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://www.w3.org/ns/ldp#membershipResource", "prefix": { "type": "prefix", "value": "ldp", "origText": "ldp:"}, "localName": { "type": "localName", "value": "membershipResource", "origText": "membershipResource"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "relativeUrl", "value": "", "origText": "&lt;&gt;" } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://www.w3.org/ns/ldp#hasMemberRelation", "prefix": { "type": "prefix", "value": "ldp", "origText": "ldp:"}, "localName": { "type": "localName", "value": "hasMemberRelation", "origText": "hasMemberRelation"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "pname", "value": "http://www.w3.org/ns/dcat#dataset", "prefix": { "type": "prefix", "value": "dcat", "origText": "dcat:"}, "localName": { "type": "localName", "value": "dataset", "origText": "dataset"} } ] }, { "type": "punctuation", "origText": ";" }, { "type": "ws", "origText": "\n  " },
-      { "type": "verb_objectList", "verb": { "type": "pname", "value": "http://www.w3.org/ns/ldp#contains", "prefix": { "type": "prefix", "value": "ldp", "origText": "ldp:"}, "localName": { "type": "localName", "value": "contains", "origText": "contains"} }, "objectList": [ { "type": "ws", "origText": " " }, { "type": "relativeUrl", "value": "dataset", "origText": "&lt;dataset&gt;" } ] },
-      { "type": "PERIOD", "origText": "." }
-    ] }
-  ]
+function origText (obj) {
+  return Object.keys(obj).reduce((acc, key) =>
+    key === 'origText'                  // extract origText
+      ? acc.concat([obj[key]])
+      : typeof obj[key] === 'object'    // recurse nested objects
+      ? acc.concat(origText(obj[key]))
+      : acc                             // ignore other values
+    , [])
 }
+
