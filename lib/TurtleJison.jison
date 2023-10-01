@@ -175,7 +175,7 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 
 %%
 
-\s+|{COMMENT}           {
+\s+           {
   // space eaten by whitespace and comments
   if (yy.skipped.last_line === yylloc.first_line &&
       yy.skipped.last_column === yylloc.first_column) {
@@ -186,6 +186,20 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
     // follows something else
     yy.skipped = yylloc
   };
+  yy.addWhitespace({type: "ws", origText: yytext});
+}
+{COMMENT}           {
+  // space eaten by whitespace and comments
+  if (yy.skipped.last_line === yylloc.first_line &&
+      yy.skipped.last_column === yylloc.first_column) {
+    // immediately follows a skipped span
+    yy.skipped.last_line = yylloc.last_line;
+    yy.skipped.last_column = yylloc.last_column;
+  } else {
+    // follows something else
+    yy.skipped = yylloc
+  };
+  yy.addWhitespace(yytext);
 }
 "."                     return 'GT_DOT';
 ";"                     return 'GT_SEMI';
@@ -201,7 +215,7 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {SPARQL_BASE}           return 'SPARQL_BASE';
 "@base"                 return 'BASE';
 "@prefix"               return 'PREFIX';
-{IRIREF}                return 'IRIREF';
+{IRIREF}                const unesc = unescapeText(yytext.substring(1, yytext.length - 1), {}); yytext = { "type": "relativeUrl", "value": yy._base === null || absoluteIRI.test(unesc) ? unesc : yy._resolveIRI(unesc) , "origText": yytext }; return 'IRIREF';
 {PNAME_LN}              return 'PNAME_LN';
 {PNAME_NS}              return 'PNAME_NS';
 {BLANK_NODE_LABEL}      return 'BLANK_NODE_LABEL';
@@ -227,9 +241,13 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 %%
 
 turtleDoc:
-      _Qstatement_E_Star EOF	{
-        return $1;
+      WS _Qstatement_E_Star EOF	{
+        return { statementList: $1.concat($2) };
       }
+;
+
+WS:
+      -> yy.getWhitespace()
 ;
 
 _Qstatement_E_Star:
@@ -238,7 +256,7 @@ _Qstatement_E_Star:
 ;
 
 statement:
-      directive	-> []
+      directive	
     | triples GT_DOT	
 ;
 
@@ -263,8 +281,9 @@ base:
 ;
 
 sparqlPrefix:
-      SPARQL_PREFIX PNAME_NS IRIREF	{
-        yy._prefixes[$2.slice(0, -1)] = $3;
+      SPARQL_PREFIX WS PNAME_NS WS IRIREF	{
+        yy._prefixes[$3.slice(0, -1)] = $5.value;
+        $$ = [{ "type": "sparqlPrefix", ws1: $2, prefix: $3, ws2: $4, namespace: $5 }].concat(yy.getWhitespace());
       }
 ;
 
@@ -276,7 +295,7 @@ sparqlBase:
 ;
 
 triples:
-      subject predicateObjectList	-> yy.finishSubject($1.concat($2)) // <<(1 2) a (3 4)>> has n triples
+      subject WS predicateObjectList	-> yy.finishSubject([{ type: "subject_predicateObjectList", subject: $1, ws1: $2, predicateObjectList: $3}].concat(yy.getWhitespace()))
     | blankNodePropertyList _QpredicateObjectList_E_Opt	-> yy.finishSubject($1.concat($2)) // blankNodePropertyList _QpredicateObjectList_E_Opt
 ;
 
@@ -286,7 +305,7 @@ _QpredicateObjectList_E_Opt:
 ;
 
 predicateObjectList:
-      verb objectList _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star	-> $2.concat($3) // verb objectList _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star
+      verb WS objectList WS _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star	-> { type: "verb_objectList", verb: $1, ws1: $2, objectList: $3.concat($4, $5) } // verb objectList _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star
 ;
 
 _O_Qverb_E_S_QobjectList_E_C:
@@ -308,11 +327,11 @@ _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star:
 ;
 
 objectList:
-      object _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star	-> yy.finishObjectList($1.concat($2)) // object _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star
+      object WS _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star	-> yy.finishObjectList($1.concat($2, $3)) // object _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star
 ;
 
 _O_QGT_COMMA_E_S_Qobject_E_C:
-      GT_COMMA object	-> $2
+      GT_COMMA WS object	-> $2.concat($3)
 ;
 
 _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star:
@@ -322,7 +341,7 @@ _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star:
 
 verb:
       predicate	-> yy.setPredicate($1)
-    | RDF_TYPE	-> yy.setPredicate(RDF_TYPE) // left is a token, right a const
+    | RDF_TYPE	-> yy.setPredicate({ "type": "a", "origText": "a" }) // left is a token, right a const
 ;
 
 subject:
@@ -402,24 +421,25 @@ BooleanLiteral:
 
 
 String:
-      STRING_LITERAL1	-> unescapeString($1, 1)
-    | STRING_LITERAL2	-> unescapeString($1, 1)
-    | STRING_LITERAL_LONG1	-> unescapeString($1, 3)
-    | STRING_LITERAL_LONG2	-> unescapeString($1, 3)
+      STRING_LITERAL1	-> { type: "STRING_LITERAL1", value: unescapeString($1, 1), origText: $1 }
+    | STRING_LITERAL2	-> { type: "STRING_LITERAL2", value: unescapeString($1, 1), origText: $1 }
+    | STRING_LITERAL_LONG1	-> { type: "STRING_LITERAL_LONG1", value: unescapeString($1, 3), origText: $1 }
+    | STRING_LITERAL_LONG2	-> { type: "STRING_LITERAL_LONG1", value: unescapeString($1, 3), origText: $1 }
 ;
 
 iri:
-      IRIREF	{
-        const unesc = unescapeText($1.slice(1,-1), {});
-        $$ = yy._base === null || absoluteIRI.test(unesc) ? unesc : yy._resolveIRI(unesc)
-      }
+      IRIREF	
     | PrefixedName	
 ;
 
 PrefixedName:
       PNAME_LN	{
         const namePos1 = $1.indexOf(':');
-        $$ = yy.expandPrefix($1.substr(0, namePos1), yy) + unescapeText($1.substr(namePos1 + 1), pnameEscapeReplacements);
+        const prefix = $1.substring(0, namePos1);
+        const localName = $1.substring(namePos1 + 1);
+        const unescaped = unescapeText(localName, pnameEscapeReplacements);
+        const value = yy.expandPrefix(prefix) + unescaped;
+        $$ = { "type": "pname", "value": value, "prefix": { "type": "prefix", "value": prefix, "origText": prefix + ":"}, "localName": { "type": "localName", "value": unescaped, "origText": localName} }
       }
     | PNAME_NS	{
         $$ = yy.expandPrefix($1.substr(0, $1.length - 1), yy);
