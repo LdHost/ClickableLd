@@ -9,7 +9,7 @@ console.log('--------------------');
 const [locations, quads] = parser.parse(`
 PREFIX pre: <http://a.example/ns#>
 
- <a> <b> [ <c> "chat" ^^ pre:dt, 444 , "chat" @en ] .
+ [ <a> 1 ] <b> 2 . # [ <c> 3 , "chat" ^^ pre:dt, [ <d> 4 ] , "chat" @en ] . 
 
 #<url1> a pre:Class1 , pre:Class2 ; #here
 #  pre:p1 "cd" , _:xy ;
@@ -17,9 +17,9 @@ PREFIX pre: <http://a.example/ns#>
 #(111 (222 333) 444 [pre:p3 [pre:p4 'p4']; pre:p5 555])
 #  pre:p6 666 .
 `);
+console.log('--------------------');
 console.log(JSON.stringify(quads, null, 2));
 console.log(origText(locations).join(''));
-console.log('--------------------');
 console.log(JSON.stringify(locations, null, 2));
 
 function origText (obj) {

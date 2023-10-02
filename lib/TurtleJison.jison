@@ -128,7 +128,7 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
   };
   yy.addWhitespace({type: "ws", origText: yytext});
 }
-{COMMENT}           {debugger; // console.log("ASDF", yytext)
+{COMMENT}           {
   // space eaten by whitespace and comments
   if (yy.skipped.last_line === yylloc.first_line &&
       yy.skipped.last_column === yylloc.first_column) {
@@ -144,8 +144,8 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 "."                     yytext = { type: "token", origText: yytext }; return 'GT_DOT';
 ";"                     yytext = { type: "token", origText: yytext }; return 'GT_SEMI';
 ","                     yytext = { type: "token", origText: yytext }; return 'GT_COMMA';
-"["                     yytext = { type: "token", origText: yytext }; return 'GT_LBRACKET';
-"]"                     yytext = { type: "token", origText: yytext }; return 'GT_RBRACKET';
+"["                     yytext = { type: "startBNode", origText: yytext }; return 'GT_LBRACKET';
+"]"                     yytext = { type: "endBNode", origText: yytext }; return 'GT_RBRACKET';
 "("                     yytext = { type: "token", origText: yytext }; return 'GT_LPAREN';
 ")"                     yytext = { type: "token", origText: yytext }; return 'GT_RPAREN';
 "^^"                    yytext = { type: "token", origText: yytext }; return 'GT_DTYPE';
@@ -236,7 +236,11 @@ sparqlBase:
 
 triples:
       subject WS predicateObjectList	-> yy.finishSubject([{ type: "subject_predicateObjectList", subject: $1, ws1: $2, predicateObjectList: $3}].concat(yy.getWhitespace()))
-    | blankNodePropertyList _QpredicateObjectList_E_Opt	-> yy.finishSubject($1.concat($2)) // blankNodePropertyList _QpredicateObjectList_E_Opt
+    | SET_SUBJECT _QpredicateObjectList_E_Opt	-> yy.finishSubject($1.concat($2)) // blankNodePropertyList _QpredicateObjectList_E_Opt
+;
+
+SET_SUBJECT:
+      blankNodePropertyList	{ yy.setSubject($1.node); $$ = $1.elts.concat(yy.getWhitespace()); }
 ;
 
 _QpredicateObjectList_E_Opt:
@@ -298,7 +302,7 @@ object:
       iri	-> [yy.finishTriple($1)]
     | BlankNode	-> [yy.finishTriple($1)]
     | collection	-> [yy.finishTriple($1[0].subject)].concat($1) // collection
-    | blankNodePropertyList	-> [yy.finishTriple($1[0].subject)].concat($1) // blankNodePropertyList
+    | blankNodePropertyList	{ yy.finishTriple($1.node); $$ = $1.elts; } // blankNodePropertyList
     | literal	-> [yy.finishTriple($1)]
 ;
 
@@ -309,11 +313,11 @@ literal:
 ;
 
 blankNodePropertyList:
-      GT_LBRACKET NEW_SUBJECT predicateObjectList GT_RBRACKET	-> yy.finishBlankNodePropertyList($3, $2)
+      NEW_SUBJECT WS predicateObjectList WS GT_RBRACKET	-> yy.finishBlankNodePropertyList($1, $2.concat($3, $4), $5)
 ;
 
 NEW_SUBJECT:
-      -> yy.startBlankNodePropertyList();
+      GT_LBRACKET WS	-> yy.startBlankNodePropertyList($1, $2);
 ;
 
 collection:
@@ -328,8 +332,8 @@ _Qobject_E_Star:
 collectionObject:
       iri	-> {node: $1, nested: []}
     | BlankNode	-> {node: $1, nested: []}
-    | collection	-> yy.makeFirstRest($1) // collection
-    | blankNodePropertyList	-> {node: $1[0].subject, nested: $1} // blankNodePropertyList
+    | collection	-> yy.makeFirstRest($1) // collection collection
+    | blankNodePropertyList	-> {node: $1[0].subject, nested: $1} // collection blankNodePropertyList
     | literal	-> {node: $1, nested: []}
 ;
 
