@@ -236,11 +236,18 @@ sparqlBase:
 
 triples:
       subject WS predicateObjectList	-> yy.finishSubject([{ type: "subject_predicateObjectList", subject: $1, ws1: $2, predicateObjectList: $3}].concat(yy.getWhitespace()))
-    | SET_SUBJECT _QpredicateObjectList_E_Opt	-> yy.finishSubject($1.concat($2)) // blankNodePropertyList _QpredicateObjectList_E_Opt
+    | collection_SUBJECT WS predicateObjectList	-> yy.finishSubject([{ type: "collection_predicateObjectList", collection: $1, ws1: $2, predicateObjectList: $3}].concat(yy.getWhitespace()))
+    | blankNodePropertyList_SUBJECT _QpredicateObjectList_E_Opt	-> yy.finishSubject($1.concat($2)) // blankNodePropertyList _QpredicateObjectList_E_Opt
 ;
 
-SET_SUBJECT:
-      blankNodePropertyList	{ yy.setSubject($1.node); $$ = $1.elts.concat(yy.getWhitespace()); }
+collection_SUBJECT:
+      collection	{ yy.setSubject($1.node); $$ = $1.elts.concat(yy.getWhitespace()); // collection_SUBJECT
+ }
+;
+
+blankNodePropertyList_SUBJECT:
+      blankNodePropertyList	{ yy.setSubject($1.node); $$ = $1.elts.concat(yy.getWhitespace()); // blankNodePropertyList_SUBJECT
+ }
 ;
 
 _QpredicateObjectList_E_Opt:
@@ -291,7 +298,7 @@ verb:
 subject:
       iri	-> yy.setSubject($1)
     | BlankNode	-> yy.setSubject($1)
-    | collection	-> yy.collectionSubject($1)
+//    | collection	-> yy.collectionSubject($1)
 ;
 
 predicate:
@@ -301,7 +308,7 @@ predicate:
 object:
       iri	-> [yy.finishTriple($1)]
     | BlankNode	-> [yy.finishTriple($1)]
-    | collection	-> [yy.finishTriple($1[0].subject)].concat($1) // collection
+    | collection	-> $1 // object collection
     | blankNodePropertyList	{ yy.finishTriple($1.node); $$ = $1.elts; } // blankNodePropertyList
     | literal	-> [yy.finishTriple($1)]
 ;
@@ -321,18 +328,18 @@ NEW_SUBJECT:
 ;
 
 collection:
-      GT_LPAREN _Qobject_E_Star GT_RPAREN	-> $2
+      GT_LPAREN WS _Qobject_E_Star WS GT_RPAREN	-> yy.makeFirstRest($1, $2, $3, $4, $5)
 ;
 
 _Qobject_E_Star:
       -> []
-    | _Qobject_E_Star collectionObject	-> $1.concat($2) // Qobject_E_Star object
+    | _Qobject_E_Star collectionObject	-> $1.concat({node: $2.node, nested: $2.nested.concat(yy.getWhitespace())}) // Qobject_E_Star object -- collectionObject
 ;
 
 collectionObject:
       iri	-> {node: $1, nested: []}
     | BlankNode	-> {node: $1, nested: []}
-    | collection	-> yy.makeFirstRest($1) // collection collection
+    | collection	-> $1 // collection collection
     | blankNodePropertyList	-> {node: $1[0].subject, nested: $1} // collection blankNodePropertyList
     | literal	-> {node: $1, nested: []}
 ;
