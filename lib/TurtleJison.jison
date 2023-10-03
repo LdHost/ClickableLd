@@ -81,8 +81,7 @@ DECIMAL                 ([+-])?([0-9])*"."([0-9])+
 EXPONENT                [Ee]([+-])?([0-9])+
 DOUBLE                  ([+-])?((([0-9])+"."([0-9])*({EXPONENT}))|((".")?([0-9])+({EXPONENT})))
 ECHAR                   "\\"[\"\'\\bfnrt]
-WS                      (" ")|(("\t")|(("\r")|("\n")))
-ANON                    "\["(({WS}))*"\]"
+ANON                    "\[" (" "|"\t"|"\r"|"\n")* "\]"
 PN_CHARS_BASE           [A-Z] | [a-z] | [\u00c0-\u00d6] | [\u00d8-\u00f6] | [\u00f8-\u02ff] | [\u0370-\u037d] | [\u037f-\u1fff] | [\u200c-\u200d] | [\u2070-\u218f] | [\u2c00-\u2fef] | [\u3001-\ud7ff] | [\uf900-\ufdcf] | [\ufdf0-\ufffd] | [\uD800-\uDB7F][\uDC00-\uDFFF] // UTF-16 surrogates for [\U00010000-\U000effff]
 PN_CHARS_U              {PN_CHARS_BASE} | '_' | '_' /* !!! raise jison bug */
 PN_CHARS                {PN_CHARS_U} | '-' | [0-9] | [\u00b7] | [\u0300-\u036f] | [\u203f-\u2040]
@@ -110,12 +109,13 @@ PLX                     {PERCENT} | {PN_LOCAL_ESC}
 PN_LOCAL                ({PN_CHARS_U} | ':' | [0-9] | {PLX}) ({PN_CHARS} | '.' | ':' | {PLX})*
 PNAME_LN                {PNAME_NS} {PN_LOCAL}
 COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))* "*/"
+WS                      \s+
 
 %no-break-if          (.*[^a-z] | '') 'return' ([^a-z].* | '') // elide trailing 'break;'
 
 %%
 
-\s+           {
+{WS}           {
   // space eaten by whitespace and comments
   if (yy.skipped.last_line === yylloc.first_line &&
       yy.skipped.last_column === yylloc.first_column) {
@@ -126,7 +126,8 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
     // follows something else
     yy.skipped = yylloc
   };
-  yy.addWhitespace({type: "ws", origText: yytext});
+  yytext = {type: "ws", origText: yytext};
+  return 'WS';
 }
 {COMMENT}           {
   // space eaten by whitespace and comments
@@ -139,15 +140,16 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
     // follows something else
     yy.skipped = yylloc
   };
-  yy.addWhitespace({type: "comment", origText: yytext});
+  yytext = {type: "comment", origText: yytext};
+  return 'COMMENT';
 }
 "."                     yytext = { type: "token", origText: yytext }; return 'GT_DOT';
 ";"                     yytext = { type: "token", origText: yytext }; return 'GT_SEMI';
 ","                     yytext = { type: "token", origText: yytext }; return 'GT_COMMA';
 "["                     yytext = { type: "startBNode", origText: yytext }; return 'GT_LBRACKET';
 "]"                     yytext = { type: "endBNode", origText: yytext }; return 'GT_RBRACKET';
-"("                     yytext = { type: "token", origText: yytext }; return 'GT_LPAREN';
-")"                     yytext = { type: "token", origText: yytext }; return 'GT_RPAREN';
+"("                     yytext = { type: "startCollection", origText: yytext }; return 'GT_LPAREN';
+")"                     yytext = { type: "endCollection", origText: yytext }; return 'GT_RPAREN';
 "^^"                    yytext = { type: "token", origText: yytext }; return 'GT_DTYPE';
 "true"                  yytext = { type: "boolean", origText: yytext }; return 'IT_true';
 "false"                 yytext = { type: "boolean", origText: yytext }; return 'IT_false';
@@ -158,7 +160,7 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {IRIREF}                yytext = yy.createRelativeIri(yytext); return 'IRIREF';
 {PNAME_LN}              yytext = yy.parsePName(yytext); return 'PNAME_LN';
 {PNAME_NS}              yytext = yy.parsePrefix(yytext); return 'PNAME_NS';
-{BLANK_NODE_LABEL}      yytext = { type: "token", origText: yytext }; return 'BLANK_NODE_LABEL';
+{BLANK_NODE_LABEL}      yytext = yy.createBlankNode("BLANK_NODE_LABEL", yytext); return 'BLANK_NODE_LABEL';
 {LANGTAG}               yytext = { type: "LANGTAG", value: yytext.substring(1), origText: yytext }; return 'LANGTAG';
 {INTEGER}               yytext = { type: "INTEGER", value: yytext, origText: yytext }; return 'INTEGER';
 {DECIMAL}               yytext = { type: "DECIMAL", value: yytext, origText: yytext }; return 'DECIMAL';
@@ -167,37 +169,48 @@ COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))*
 {STRING_LITERAL2}       yytext = { type: "STRING_LITERAL2", value: yy.unescapeString(yytext, 1), origText: yytext }; return 'STRING_LITERAL2';
 {STRING_LITERAL_LONG1}  yytext = { type: "STRING_LITERAL_LONG1", value: yy.unescapeString(yytext, 3), origText: yytext }; return 'STRING_LITERAL_LONG1';
 {STRING_LITERAL_LONG2}  yytext = { type: "STRING_LITERAL_LONG2", value: yy.unescapeString(yytext, 3), origText: yytext }; return 'STRING_LITERAL_LONG2';
-{ANON}                  yytext = { type: "ANON", origText: yytext }; return 'ANON';
+{ANON}                  yytext = yy.createBlankNode("ANON", yytext); return 'ANON';
 "a"                     yytext = { type: "keyword", origText: yytext }; return 'RDF_TYPE';
 <<EOF>>                 return 'EOF';
 [a-zA-Z0-9_-]+          return 'unexpected word "'+yytext+'"';
 .                       return 'invalid character '+yytext;
 
+
+
 /lex
 
 %start turtleDoc
+
+// %left WS
+// %left COMMENT
 
 
 %%
 
 turtleDoc:
-      WS _Qstatement_E_Star EOF	{
-        return { statementList: $1.concat($2) };
+      WSS _Qstatement_E_Star EOF	{
+        return { statementList: $1.concat($2, $3) };
       }
 ;
 
-WS:
-      -> yy.getWhitespace()
+WSS:
+      	-> []
+    | WSS WS_OR_COMMENT	-> $1.concat([$2])
+;
+
+WS_OR_COMMENT:
+      WS	
+    | COMMENT	
 ;
 
 _Qstatement_E_Star:
       -> []
-    | _Qstatement_E_Star statement	-> $1.concat($2)
+    | _Qstatement_E_Star statement WSS	-> $1.concat($2, $3)
 ;
 
 statement:
       directive	
-    | triples WS GT_DOT	-> $1.concat($2, $3, yy.getWhitespace());
+    | triples  GT_DOT	-> $1.concat([$2]);
 ;
 
 directive:
@@ -221,7 +234,7 @@ base:
 ;
 
 sparqlPrefix:
-      SPARQL_PREFIX WS PNAME_NS WS IRIREF	{
+      SPARQL_PREFIX WSS PNAME_NS WSS IRIREF	{
         yy._prefixes[$3.value] = $5.value;
         $$ = [{ "type": "sparqlPrefix", keyword: $1, ws1: $2, prefix: $3, ws2: $4, namespace: $5 }].concat(yy.getWhitespace());
       }
@@ -235,13 +248,13 @@ sparqlBase:
 ;
 
 triples:
-      subject WS predicateObjectList	-> yy.finishSubject([{ type: "subject_predicateObjectList", subject: $1, ws1: $2, predicateObjectList: $3}].concat(yy.getWhitespace()))
-    | collection_SUBJECT WS predicateObjectList	-> yy.finishSubject([{ type: "collection_predicateObjectList", collection: $1, ws1: $2, predicateObjectList: $3}].concat(yy.getWhitespace()))
+      subject WSS predicateObjectList	-> yy.finishSubject([{ type: "subject_predicateObjectList", subject: $1, ws1: $2, predicateObjectList: $3}].concat(yy.getWhitespace()))
+    | collection_SUBJECT WSS predicateObjectList	-> yy.finishSubject([{ type: "collection_predicateObjectList", collection: $1, ws1: $2, predicateObjectList: $3}].concat(yy.getWhitespace()))
     | blankNodePropertyList_SUBJECT _QpredicateObjectList_E_Opt	-> yy.finishSubject($1.concat($2)) // blankNodePropertyList _QpredicateObjectList_E_Opt
 ;
 
 collection_SUBJECT:
-      collection	{ yy.setSubject($1.node); $$ = $1.elts.concat(yy.getWhitespace()); // collection_SUBJECT
+      collection	{ yy.setSubject($1.node); $$ = $1.elts; // collection_SUBJECT
  }
 ;
 
@@ -256,33 +269,33 @@ _QpredicateObjectList_E_Opt:
 ;
 
 predicateObjectList:
-      verb WS objectList WS _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star	-> [{ type: "verb_objectList", verb: $1, ws1: $2, objectList: $3.concat($4) }].concat($5).concat(yy.getWhitespace()) // verb objectList _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star
+      verb WSS objectList  _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star	-> [{ type: "verb_objectList", verb: $1, ws1: $2, objectList: $3 }].concat($4) // verb objectList _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star
 ;
 
 _O_Qverb_E_S_QobjectList_E_C:
-      WS verb WS objectList	-> $1.concat([{ type: "verb_objectList", verb: $2, ws1: $3, objectList: $4 }], yy.getWhitespace())
+       verb WSS objectList	-> [{ type: "verb_objectList", verb: $1, ws1: $2, objectList: $3 }]
 ;
 
 _Q_O_Qverb_E_S_QobjectList_E_C_E_Opt:
-      -> yy.getWhitespace()
-    | _O_Qverb_E_S_QobjectList_E_C	->$1.concat(yy.getWhitespace())
+      	-> []
+    | _O_Qverb_E_S_QobjectList_E_C	
 ;
 
 _O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C:
-      GT_SEMI _Q_O_Qverb_E_S_QobjectList_E_C_E_Opt	-> [$1].concat($2, yy.getWhitespace())
+      GT_SEMI WSS _Q_O_Qverb_E_S_QobjectList_E_C_E_Opt	-> [$1].concat($2, $3)
 ;
 
 _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star:
-      -> yy.getWhitespace()
-    | _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star _O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C	-> $1.concat($2, yy.getWhitespace()) // Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star _O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C
+      	-> []
+    | _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star _O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C	-> $1.concat($2) // Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star _O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C
 ;
 
 objectList:
-      object WS _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star	-> yy.finishObjectList($1.concat($2, $3)) // object _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star
+      object WSS _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star	-> yy.finishObjectList($1.concat($2, $3)) // object _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star
 ;
 
 _O_QGT_COMMA_E_S_Qobject_E_C:
-      GT_COMMA WS object	-> [$1].concat($2, $3, yy.getWhitespace())
+      GT_COMMA WSS object WSS	-> [$1].concat($2, $3, $4)
 ;
 
 _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star:
@@ -320,20 +333,20 @@ literal:
 ;
 
 blankNodePropertyList:
-      NEW_SUBJECT WS predicateObjectList WS GT_RBRACKET	-> yy.finishBlankNodePropertyList($1, $2.concat($3, $4), $5)
+      NEW_SUBJECT  predicateObjectList  GT_RBRACKET	-> yy.finishBlankNodePropertyList($1, $2.concat($3, $4), $5)
 ;
 
 NEW_SUBJECT:
-      GT_LBRACKET WS	-> yy.startBlankNodePropertyList($1, $2);
+      GT_LBRACKET 	-> yy.startBlankNodePropertyList($1, $2);
 ;
 
 collection:
-      GT_LPAREN WS _Qobject_E_Star WS GT_RPAREN	-> yy.makeFirstRest($1, $2, $3, $4, $5)
+      GT_LPAREN _Qobject_E_Star WSS GT_RPAREN	-> yy.makeFirstRest($1, $2, $3, $4)
 ;
 
 _Qobject_E_Star:
       -> []
-    | _Qobject_E_Star collectionObject	-> $1.concat({node: $2.node, nested: $2.nested.concat(yy.getWhitespace())}) // Qobject_E_Star object -- collectionObject
+    | _Qobject_E_Star WSS collectionObject	-> $1.concat({ws0: $2, node: $3.node, nested: $3.nested}) // Qobject_E_Star object -- collectionObject
 ;
 
 collectionObject:
@@ -351,12 +364,12 @@ NumericLiteral:
 ;
 
 RDFLiteral:
-      String WS _Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C_E_Opt	-> yy.createParsedLiteral($3.type, $1, $2, $3.attrs)
+      String  _Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C_E_Opt	-> yy.createParsedLiteral($2.type, $1, $2.attrs)
 ;
 
 _O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C:
       LANGTAG	-> { type: "langTagLiteral", attrs: { language: $1 } }
-    | GT_DTYPE WS iri	-> { type: "datatypedLiteral", attrs: { datatype: { type: "ParsedDatatype", value: $3.value, token: $1, ws1: $2, iri: $3 } } }
+    | GT_DTYPE  iri	-> { type: "datatypedLiteral", attrs: { datatype: { type: "ParsedDatatype", value: $3.value, token: $1, ws1: $2, iri: $3 } } }
 ;
 
 _Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C_E_Opt:
@@ -389,6 +402,6 @@ PrefixedName:
 ;
 
 BlankNode:
-      BLANK_NODE_LABEL	-> yy.createBlankNode($1)
-    | ANON	-> yy.createBlankNode()
+      BLANK_NODE_LABEL	
+    | ANON	
 ;
