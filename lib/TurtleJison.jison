@@ -250,11 +250,11 @@ sparqlBase:
 triples:
       subject WSS predicateObjectList	-> yy.finishSubject([{ type: "subject_predicateObjectList", subject: $1, ws1: $2, predicateObjectList: $3}].concat(yy.getWhitespace()))
     | collection_SUBJECT WSS predicateObjectList	-> yy.finishSubject([{ type: "collection_predicateObjectList", collection: $1, ws1: $2, predicateObjectList: $3}].concat(yy.getWhitespace()))
-    | blankNodePropertyList_SUBJECT _QpredicateObjectList_E_Opt	-> yy.finishSubject($1.concat($2)) // blankNodePropertyList _QpredicateObjectList_E_Opt
+    | blankNodePropertyList_SUBJECT WSS _QpredicateObjectList_E_Opt	-> yy.finishSubject($1.concat($2, $3)) // blankNodePropertyList _QpredicateObjectList_E_Opt
 ;
 
 collection_SUBJECT:
-      collection	{ yy.setSubject($1.node); $$ = $1.elts; // collection_SUBJECT
+      collection	{ yy.setSubject($1.node); $$ = [$1.node].concat($1.elts); // collection_SUBJECT
  }
 ;
 
@@ -291,7 +291,7 @@ _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star:
 ;
 
 objectList:
-      object WSS _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star	-> yy.finishObjectList($1.concat($2, $3)) // object _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star
+      object WSS _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star	-> yy.finishObjectList($1, $2.concat($3)) // object _Q_O_QGT_COMMA_E_S_Qobject_E_C_E_Star
 ;
 
 _O_QGT_COMMA_E_S_Qobject_E_C:
@@ -333,11 +333,11 @@ literal:
 ;
 
 blankNodePropertyList:
-      NEW_SUBJECT  predicateObjectList  GT_RBRACKET	-> yy.finishBlankNodePropertyList($1, $2.concat($3, $4), $5)
+      NEW_SUBJECT WSS predicateObjectList GT_RBRACKET	-> yy.finishBlankNodePropertyList($1, $2, $3, $4)
 ;
 
 NEW_SUBJECT:
-      GT_LBRACKET 	-> yy.startBlankNodePropertyList($1, $2);
+      GT_LBRACKET 	-> yy.startBlankNodePropertyList($1);
 ;
 
 collection:
@@ -353,7 +353,7 @@ collectionObject:
       iri	-> {node: $1, nested: []}
     | BlankNode	-> {node: $1, nested: []}
     | collection	-> $1 // collection collection
-    | blankNodePropertyList	-> {node: $1[0].subject, nested: $1} // collection blankNodePropertyList
+    | blankNodePropertyList	-> {node: $1.node, nested: $1.elts} // collection blankNodePropertyList
     | literal	-> {node: $1, nested: []}
 ;
 
