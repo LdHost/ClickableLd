@@ -5,7 +5,7 @@
   "main": "ClickableLd.js",
   "scripts": {
     "parser": "ts-jison -n TurtleJison -t javascript -p lr -o ./lib/TurtleJison.js ./lib/TurtleJison.jison",
-    "test": "jest"
+    "test": "jest --coverage"
   },
   "keywords": [],
   "author": "",

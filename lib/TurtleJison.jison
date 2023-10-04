@@ -189,7 +189,7 @@ WS                      \s+
 
 turtleDoc:
       WSS _Qstatement_E_Star EOF	{
-        return { statementList: $1.concat($2, $3) };
+        return { statementList: $1.concat($2) };
       }
 ;
 
@@ -210,7 +210,7 @@ _Qstatement_E_Star:
 
 statement:
       directive	
-    | triples  GT_DOT	-> $1.concat([$2]);
+    | triples GT_DOT	-> $1.concat([$2]);
 ;
 
 directive:
@@ -269,7 +269,7 @@ _QpredicateObjectList_E_Opt:
 ;
 
 predicateObjectList:
-      verb WSS objectList  _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star	-> [{ type: "verb_objectList", verb: $1, ws1: $2, objectList: $3 }].concat($4) // verb objectList _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star
+      verb WSS objectList _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star	-> [{ type: "verb_objectList", verb: $1, ws1: $2, objectList: $3 }].concat($4) // verb objectList _Q_O_QGT_SEMI_E_S_Qverb_E_S_QobjectList_E_Opt_C_E_Star
 ;
 
 _O_Qverb_E_S_QobjectList_E_C:
@@ -364,12 +364,12 @@ NumericLiteral:
 ;
 
 RDFLiteral:
-      String  _Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C_E_Opt	-> yy.createParsedLiteral($2.type, $1, $2.attrs)
+      String _Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C_E_Opt	-> yy.createParsedLiteral($2.type, $1, $2.attrs)
 ;
 
 _O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C:
       LANGTAG	-> { type: "langTagLiteral", attrs: { language: $1 } }
-    | GT_DTYPE  iri	-> { type: "datatypedLiteral", attrs: { datatype: { type: "ParsedDatatype", value: $3.value, token: $1, ws1: $2, iri: $3 } } }
+    | GT_DTYPE iri	-> { type: "datatypedLiteral", attrs: { datatype: { type: "ParsedDatatype", value: $3.value, token: $1, ws1: $2, iri: $3 } } }
 ;
 
 _Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C_E_Opt:
