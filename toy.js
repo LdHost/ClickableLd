@@ -7,7 +7,7 @@ const factory = new DataFactory();
 const parser = new TurtleParser({baseIRI, factory})
 
 console.log('--------------------');
-const [locations, quads] = parser.parse(``);
+const [locations, quads] = parser.parse(`()<p>().`);
 console.log('--------------------');
 console.log(JSON.stringify(quads, null, 2));
 console.log(origText(locations).join(''));

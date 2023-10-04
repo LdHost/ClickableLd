@@ -321,7 +321,7 @@ predicate:
 object:
       iri	-> [yy.finishTriple($1)]
     | BlankNode	-> [yy.finishTriple($1)]
-    | collection	-> $1 // object collection
+    | collection	-> [$1] // object collection
     | blankNodePropertyList	{ yy.finishTriple($1.node); $$ = [$1.node].concat($1.elts); } // blankNodePropertyList
     | literal	-> [yy.finishTriple($1)]
 ;
