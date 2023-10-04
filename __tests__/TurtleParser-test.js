@@ -1,7 +1,12 @@
+/**
+ * invocation: e.g. `DEBUG=true TESTS='\(\(\)\)<p>\(\(\)\).' ./node_modules/.bin/jest __tests__/TurtleParser-test.js`
+ */
+
 const {TurtleParser} = require('../lib/TurtleParser');
 const {origText} = require('../lib/TurtleJisonContext');
 const {DataFactory} = require('rdf-data-factory');
 
+DEBUG = process.env.DEBUG;
 TESTS = process.env.TESTS;
 
 const baseIRI = 'http://localhost/some/path.ext'
@@ -10,9 +15,13 @@ const parser = new TurtleParser({baseIRI, factory})
 
 describe('TurtleParser', () => {
   for (const test of getTests()) {
-    if (!TESTS || test.label === TESTS || test.label.matches(new RegExp(TESTS))) {
+    if (!TESTS || test.label === TESTS || test.label.match(new RegExp(TESTS))) {
       it(`should parse ${test.label}`, () => {
         const [parseTree, quads] = parser.parse(test.in, test.base, test.prefixes);
+        if (DEBUG) {
+          console.log("parseTree:", JSON.stringify(parseTree, null, 2));
+          console.log("quads:", quads);
+        }
         const rendered = origText(parseTree).join('');
         expect(rendered).toEqual(test.in);
         if (test.parseTree) { // console.log(JSON.stringify(parseTree))
@@ -103,16 +112,18 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/`, parseTree:
     ]} },
   { label: "()<p>().", in: `()<p>().`, parseTree: {
     "statementList": [
-      {"type": "collection_predicateObjectList",
-       "collection": [
-         { "type": "collection","startToken":{"type": "startCollection","origText": "("},"elts": [
-         ], "ws1": [],
-           "endToken": {"type":"endCollection","origText":")"},
-           "term":{"termType":"NamedNode","value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"}}
-       ],
-       "ws1": [],
-       "predicateObjectList": [
-          {"type": "verb_objectList",
+      { "type": "collection_predicateObjectList",
+        "collection": [
+          { "type": "collection",
+            "startToken": { "type": "startCollection", "origText": "(" },
+            "elts": [],
+            "ws1": [],
+            "endToken": { "type": "endCollection", "origText": ")" },
+            "term": { "termType": "NamedNode", "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" } }
+        ],
+        "ws1": [],
+        "predicateObjectList": [
+          { "type": "verb_objectList",
             "verb": {
               "type": "relativeUrl",
               "value": "http://localhost/some/p",
@@ -121,18 +132,59 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/`, parseTree:
             },
             "ws1": [],
             "objectList": [
-              {"node": {
-                "type":"collection","startToken": {"type":"startCollection","origText":"("},"elts":[],"ws1":[],
-                "endToken": {"type":"endCollection","origText": ")"},
-                "term": { "termType": "NamedNode", "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"}
-              },
-               "elts":[]}
-            ]
-          }
-        ]
-      },
-      {"type":"token","origText": "."}
+              { "type": "collection",
+                "startToken": { "type": "startCollection", "origText": "(" },
+                "elts": [],
+                "ws1": [],
+                "endToken": { "type": "endCollection", "origText": ")" },
+                "term": { "termType": "NamedNode", "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" } }
+            ] }
+        ] },
+      { "type": "token", "origText": "." }
     ]
+  } },
+  { label: "(())<p>(()).", in: `(())<p>(()).`, parseTree: {
+  "statementList": [
+    { "type": "collection_predicateObjectList", "collection": [
+        { "type": "collection", "startToken": { "type": "startCollection", "origText": "(" },
+          "elts": [
+            { "ws0": [],
+              "node": {
+                "type": "collection",
+                "startToken": { "type": "startCollection", "origText": "(" },
+                "elts": [], "ws1": [], "endToken": { "type": "endCollection", "origText": ")" },
+                "term": { "termType": "NamedNode", "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" } },
+              "elts": [], "ord": 0,
+              "li": { "termType": "BlankNode", "value": "df_0_0" } }
+          ],
+          "ws1": [], "endToken": { "type": "endCollection", "origText": ")" } }
+      ],
+      "ws1": [],
+      "predicateObjectList": [
+        { "type": "verb_objectList",
+          "verb": {
+            "type": "relativeUrl", "value": "http://localhost/some/p", "origText": "<p>",
+            "term": { "termType": "NamedNode", "value": "http://localhost/some/p" } },
+          "ws1": [],
+          "objectList": [
+            { "type": "collection",
+              "startToken": { "type": "startCollection", "origText": "(" },
+              "elts": [
+                { "ws0": [],
+                  "node": {
+                    "type": "collection", "startToken": { "type": "startCollection", "origText": "(" },
+                    "elts": [],
+                    "ws1": [], "endToken": { "type": "endCollection", "origText": ")" },
+                    "term": { "termType": "NamedNode", "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" } },
+                  "elts": [], "ord": 1,
+                  "li": { "termType": "BlankNode", "value": "df_0_1" } }
+              ],
+              "ws1": [],
+              "endToken": { "type": "endCollection", "origText": ")" } }
+          ] }
+      ] },
+    { "type": "token", "origText": "." }
+  ]
   } },
   { label: "kitchen sink", in: `
 PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/
