@@ -1,4 +1,5 @@
 const {TurtleParser} = require('./lib/TurtleParser');
+const {origText} = require('./lib/TurtleJisonContext');
 const {DataFactory} = require('rdf-data-factory');
 
 const baseIRI = 'http://localhost/some/path.ext'
@@ -21,14 +22,3 @@ console.log('--------------------');
 console.log(JSON.stringify(quads, null, 2));
 console.log(origText(locations).join(''));
 console.log(JSON.stringify(locations, null, 2));
-
-function origText (obj) {
-  return Object.keys(obj).reduce((acc, key) =>
-    key === 'origText'                  // extract origText
-      ? acc.concat([obj[key]])
-      : typeof obj[key] === 'object'    // recurse nested objects
-      ? acc.concat(origText(obj[key]))
-      : acc                             // ignore other values
-    , [])
-}
-
