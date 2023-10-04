@@ -321,7 +321,7 @@ predicate:
 object:
       iri	-> [yy.finishTriple($1)]
     | BlankNode	-> [yy.finishTriple($1)]
-    | collection	-> [$1] // object collection
+    | collection	-> [yy.finishTriple($1.node)] // object collection
     | blankNodePropertyList	{ yy.finishTriple($1.node); $$ = [$1.node].concat($1.elts); } // blankNodePropertyList
     | literal	-> [yy.finishTriple($1)]
 ;
@@ -346,15 +346,15 @@ collection:
 
 _Qobject_E_Star:
       -> []
-    | _Qobject_E_Star WSS collectionObject	-> $1.concat({ws0: $2, node: $3.node, nested: $3.nested}) // Qobject_E_Star object -- collectionObject
+    | _Qobject_E_Star WSS collectionObject	-> $1.concat({ws0: $2, node: $3.node, elts: $3.elts}) // Qobject_E_Star object -- collectionObject
 ;
 
 collectionObject:
-      iri	-> {node: $1, nested: []}
-    | BlankNode	-> {node: $1, nested: []}
+      iri	-> {node: $1, elts: []}
+    | BlankNode	-> {node: $1, elts: []}
     | collection	-> $1 // collection collection
-    | blankNodePropertyList	-> {node: $1.node, nested: $1.elts} // collection blankNodePropertyList
-    | literal	-> {node: $1, nested: []}
+    | blankNodePropertyList	-> {node: $1.node, elts: $1.elts} // collection blankNodePropertyList
+    | literal	-> {node: $1, elts: []}
 ;
 
 NumericLiteral:
