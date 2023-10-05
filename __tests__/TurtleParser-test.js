@@ -12,7 +12,7 @@ TESTS = process.env.TESTS;
 describe('TurtleParser', () => {
   describe('construction', () => {
     it('should construct with no params', () => {
-      const parser = new TurtleParser()
+      const parser = new TurtleParser();
       expect(parser.baseIRI).toBe(null);
       expect(parser.factory).toBeInstanceOf(DataFactory);
       const [parseTree, quads] = parser.parse('<a> <b> <c> .');

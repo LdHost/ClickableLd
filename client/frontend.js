@@ -1,11 +1,12 @@
+
 const Elts = {
-  page: document.querySelector('#page');
-}
+  page: document.querySelector('#page')
+};
 
-const QS = document.querySelector;
-const QSA = document.querySelectorAll;
+const QS = document.querySelector.bind(document);
+const QSA = document.querySelectorAll.bind(document);
 
-document.onload=onLoad;
+window.addEventListener("load", onLoad);
 
 function log (className, msg) {
   const li = document.createElement('li');
@@ -14,19 +15,25 @@ function log (className, msg) {
   QS('#messages').prepend(li);
 }
 
-async function onLoad () {
-  console.log(arguments);
-  const curDoc = null;
-  if (curDoc)
-    renderDoc(curDoc);
-  else
-    inputDoc();
+async function onLoad (evt) {
+  Elts.page.oninput = inputDoc;
+  const params = new URLSearchParams(location.search);
+  const browse = params.get('browse');
+  if (browse) {
+    Elts.page.value = browse;
+    inputDoc.call(Elts.page, evt);
+  }
 }
 
-async renderDoc(url) {
+async function inputDoc (evt) {
+  if (this.value)
+    renderDoc(this.value);
+}
+
+async function renderDoc (url) {
   const resp = await fetch(url);
   const body = await resp.text();
   if (!resp.ok)
     throw Error(`fetch(${url}) => ${resp.code}:\n${body}`);
-  RenderClickableLd(QS('.clickable'), body, 'text/turtle');
+  RenderClickableLd(document.location.href, QS('.clickable'), body, 'text/turtle');
 }

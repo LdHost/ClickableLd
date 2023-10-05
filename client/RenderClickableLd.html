@@ -53,13 +53,14 @@
       .base {font-size: smaller;}
       .keyword {color: #737;}
     </style>
+    <script>globalThis.module = {}</script>
+    <script src="./build/TurtleParser-bundle.js"></script>
     <script src="./frontend-config.js"></script>
-    <script src="./frontend.js"></script>
     <script src="../ClickableLd.js"></script>
   </head>
   <body>
     <h1>Sites</h1>
-    <p>Now visiting <span id="page">-</span></p>
+    <p>Now visiting <input id="page"></ibput></p>
     <div>
       <div class="clickable">
       </div>
@@ -68,5 +69,6 @@
       <h2 style="float:left">Messages</h2><p style="float:left; padding-top: 1.3ex; padding-left: .5em;">(most recent first)</p><div style="clear:both"/>
     </div>
     <ol id="messages"></ol>
+    <script src="./frontend.js"></script>
   </body>
 </html>
