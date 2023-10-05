@@ -186,15 +186,31 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/`, parseTree:
     { "type": "token", "origText": "." }
   ]
   } },
-  { label: "kitchen sink", in: `
+  { label: "kitchen sink spaces", in: `
+PREFIX pre: <http://a.example/ns#> 
+
+ <url1> a pre:Class1 , pre:Class2 ; #here
+  pre:p1 "cd" , "ef"@en , "gh"^^<ji> , _:xy ;
+  pre:p2 <//b.example/u3> .
+
+ ( 111 ( 222 333 ) 444  [ pre:p3 [ pre:p4 'p4' ] ; pre:p5 555 ] ) 
+  pre:p6 () .
+ [ <a> 1, [ <b> 2 ] ].
+ [ # mid-anon
+ ] <b> [ # mid-anon
+ ] .
+# [] <c> 3 , "chat" ^^ pre:dt .
+# [ <c> 3 , "chat" ^^ pre:dt, [ <d> 4 ] , "chat" @en ] . 
+` },
+  { label: "kitchen sink comments", in: `
 PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/
 
 /*a*/<url1>/*b*/a/*c*/pre:Class1/*d*/,/*e*/pre:Class2/*f*/; #here
   pre:p1 "cd" , _:xy ;
   pre:p2 <//b.example/u3> .
 
-/*a*/(/*b*/111/*c*/(/*d*/222/*e*/333/*f*/)/*g*/444/*h*/ [ pre:p3 [ pre:p4 'p4' ] ; pre:p5 555 ] )/*i*/ 
+/*a*/(/*b*/111/*c*/(/*d*/222/*e*/333/*f*/)/*g*/444/*h*/[/*i*/pre:p3/*j*/[/*k*/pre:p4/*k*/'p4'/*m*/]/*n*/;/*o*/pre:p5/*p*/555/*q*/]/*r*/)/*i*/
   pre:p6 () .
  [ <a> 1 ] <b> 2 . # [ <c> 3 , "chat" ^^ pre:dt, [ <d> 4 ] , "chat" @en ] . 
-` }
+` },
 ]; }

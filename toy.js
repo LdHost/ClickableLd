@@ -7,8 +7,13 @@ const factory = new DataFactory();
 const parser = new TurtleParser({baseIRI, factory})
 
 console.log('--------------------');
-const [parseTree, quads] = parser.parse(`()<p>().`);
+const text = ` <z> <y> "a"^^<b> , "c"@de , "f"^^g:h ; <p2> 1 .`;
+const [parseTree, quads] = parser.parse(text, baseIRI, {"g": "http://a.example/g#"});
 console.log('--------------------');
-console.log(JSON.stringify(quads, null, 2));
-console.log(origText(parseTree).join(''));
+const orig = origText(parseTree).join('');
+if (orig === text)
+  console.log('==')
+else
+  console.log("!=\n" + text + "\n--\n" + orig + "---");
 console.log(JSON.stringify(parseTree, null, 2));
+console.log(JSON.stringify(quads, null, 2));

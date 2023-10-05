@@ -75,13 +75,15 @@
 /* lexical grammar */
 %lex
 
+COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))* "*/"
+WS                      \s+
 LANGTAG                 "@"([A-Za-z])+(("-"([0-9A-Za-z])+))*
 INTEGER                 ([+-])?([0-9])+
 DECIMAL                 ([+-])?([0-9])*"."([0-9])+
 EXPONENT                [Ee]([+-])?([0-9])+
 DOUBLE                  ([+-])?((([0-9])+"."([0-9])*({EXPONENT}))|((".")?([0-9])+({EXPONENT})))
 ECHAR                   "\\"[\"\'\\bfnrt]
-ANON                    "\[" (" "|"\t"|"\r"|"\n")* "\]"
+ANON                    "[" ({WS}|{COMMENT})* "]"
 PN_CHARS_BASE           [A-Z] | [a-z] | [\u00c0-\u00d6] | [\u00d8-\u00f6] | [\u00f8-\u02ff] | [\u0370-\u037d] | [\u037f-\u1fff] | [\u200c-\u200d] | [\u2070-\u218f] | [\u2c00-\u2fef] | [\u3001-\ud7ff] | [\uf900-\ufdcf] | [\ufdf0-\ufffd] | [\uD800-\uDB7F][\uDC00-\uDFFF] // UTF-16 surrogates for [\U00010000-\U000effff]
 PN_CHARS_U              {PN_CHARS_BASE} | '_' | '_' /* !!! raise jison bug */
 PN_CHARS                {PN_CHARS_U} | '-' | [0-9] | [\u00b7] | [\u0300-\u036f] | [\u203f-\u2040]
@@ -108,8 +110,6 @@ PN_LOCAL_ESC            '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(
 PLX                     {PERCENT} | {PN_LOCAL_ESC}
 PN_LOCAL                ({PN_CHARS_U} | ':' | [0-9] | {PLX}) ({PN_CHARS} | '.' | ':' | {PLX})*
 PNAME_LN                {PNAME_NS} {PN_LOCAL}
-COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))* "*/"
-WS                      \s+
 
 %no-break-if          (.*[^a-z] | '') 'return' ([^a-z].* | '') // elide trailing 'break;'
 
@@ -143,6 +143,7 @@ WS                      \s+
   yytext = {type: "comment", origText: yytext};
   return 'COMMENT';
 }
+{ANON}                  yytext = yy.createBlankNode("ANON", yytext); return 'ANON';
 "."                     yytext = { type: "token", origText: yytext }; return 'GT_DOT';
 ";"                     yytext = { type: "token", origText: yytext }; return 'GT_SEMI';
 ","                     yytext = { type: "token", origText: yytext }; return 'GT_COMMA';
@@ -169,7 +170,6 @@ WS                      \s+
 {STRING_LITERAL2}       yytext = { type: "STRING_LITERAL2", value: yy.unescapeString(yytext, 1), origText: yytext }; return 'STRING_LITERAL2';
 {STRING_LITERAL_LONG1}  yytext = { type: "STRING_LITERAL_LONG1", value: yy.unescapeString(yytext, 3), origText: yytext }; return 'STRING_LITERAL_LONG1';
 {STRING_LITERAL_LONG2}  yytext = { type: "STRING_LITERAL_LONG2", value: yy.unescapeString(yytext, 3), origText: yytext }; return 'STRING_LITERAL_LONG2';
-{ANON}                  yytext = yy.createBlankNode("ANON", yytext); return 'ANON';
 "a"                     yytext = { type: "keyword", origText: yytext }; return 'RDF_TYPE';
 <<EOF>>                 return 'EOF';
 [a-zA-Z0-9_-]+          return 'unexpected word "'+yytext+'"';
@@ -236,7 +236,7 @@ base:
 sparqlPrefix:
       SPARQL_PREFIX WSS PNAME_NS WSS IRIREF	{
         yy._prefixes[$3.value] = $5.value;
-        $$ = [{ "type": "sparqlPrefix", keyword: $1, ws1: $2, prefix: $3, ws2: $4, namespace: $5 }].concat(yy.getWhitespace());
+        $$ = [{ "type": "sparqlPrefix", keyword: $1, ws1: $2, prefix: $3, ws2: $4, namespace: $5 }];
       }
 ;
 
@@ -248,8 +248,8 @@ sparqlBase:
 ;
 
 triples:
-      subject WSS predicateObjectList	-> yy.finishSubject([{ type: "subject_predicateObjectList", subject: $1, ws1: $2, predicateObjectList: $3}].concat(yy.getWhitespace()))
-    | collection_SUBJECT WSS predicateObjectList	-> yy.finishSubject([{ type: "collection_predicateObjectList", collection: $1, ws1: $2, predicateObjectList: $3}].concat(yy.getWhitespace()))
+      subject WSS predicateObjectList	-> yy.finishSubject([{ type: "subject_predicateObjectList", subject: $1, ws1: $2, predicateObjectList: $3}])
+    | collection_SUBJECT WSS predicateObjectList	-> yy.finishSubject([{ type: "collection_predicateObjectList", collection: $1, ws1: $2, predicateObjectList: $3}])
     | blankNodePropertyList_SUBJECT WSS _QpredicateObjectList_E_Opt	-> yy.finishSubject($1.concat($2, $3)) // blankNodePropertyList _QpredicateObjectList_E_Opt
 ;
 
@@ -264,8 +264,8 @@ blankNodePropertyList_SUBJECT:
 ;
 
 _QpredicateObjectList_E_Opt:
-      -> yy.getWhitespace()
-    | predicateObjectList	-> $1.concat(yy.getWhitespace());
+      	-> []
+    | predicateObjectList	-> $1;
 ;
 
 predicateObjectList:
@@ -369,7 +369,7 @@ RDFLiteral:
 
 _O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C:
       LANGTAG	-> { type: "langTagLiteral", attrs: { language: $1 } }
-    | GT_DTYPE iri	-> { type: "datatypedLiteral", attrs: { datatype: { type: "ParsedDatatype", value: $3.value, token: $1, ws1: $2, iri: $3 } } }
+    | GT_DTYPE iri	-> { type: "datatypedLiteral", attrs: { datatype: { type: "ParsedDatatype", token: $1, iri: $2 } } }
 ;
 
 _Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C_E_Opt:
