@@ -9,27 +9,127 @@ const {DataFactory} = require('rdf-data-factory');
 DEBUG = process.env.DEBUG;
 TESTS = process.env.TESTS;
 
-const baseIRI = 'http://localhost/some/path.ext'
-const factory = new DataFactory();
-const parser = new TurtleParser({baseIRI, factory})
-
 describe('TurtleParser', () => {
-  for (const test of getTests()) {
-    if (!TESTS || test.label === TESTS || test.label.match(new RegExp(TESTS))) {
-      it(`should parse ${test.label}`, () => {
-        const [parseTree, quads] = parser.parse(test.in, test.base, test.prefixes);
-        if (DEBUG) {
-          console.log("parseTree:", JSON.stringify(parseTree, null, 2));
-          console.log("quads:", quads);
-        }
-        const rendered = origText(parseTree).join('');
-        expect(rendered).toEqual(test.in);
-        if (test.parseTree) { // console.log(JSON.stringify(parseTree))
-          expect(parseTree).toEqual(test.parseTree);
-        }
+  describe('construction', () => {
+    it('should construct with no params', () => {
+      const parser = new TurtleParser()
+      expect(parser.baseIRI).toBe(null);
+      expect(parser.factory).toBeInstanceOf(DataFactory);
+      const [parseTree, quads] = parser.parse('<a> <b> <c> .');
+      expect(parseTree).toEqual({
+        "statementList": [
+          { "type": "subject_predicateObjectList",
+            "subject": { "type": "relativeUrl", "value": "a", "origText": "<a>",
+                         "term": { "termType": "NamedNode", "value": "a" } },
+            "ws1": [ { "type": "ws", "origText": " " } ],
+            "predicateObjectList": [
+              {
+                "type": "verb_objectList",
+                "verb": { "type": "relativeUrl", "value": "b", "origText": "<b>",
+                          "term": { "termType": "NamedNode", "value": "b" } },
+                "ws1": [ { "type": "ws", "origText": " " } ],
+                "objectList": [
+                  { "type": "relativeUrl", "value": "c", "origText": "<c>",
+                    "term": { "termType": "NamedNode", "value": "c" } },
+                  { "type": "ws", "origText": " " }
+                ] }
+            ] },
+          { "type": "token", "origText": "." }
+        ]
       });
+      expect(quads).toEqual([
+        { "subject": { "termType": "NamedNode", "value": "a" },
+          "predicate": { "termType": "NamedNode", "value": "b" },
+          "object": { "termType": "NamedNode", "value": "c" } }
+      ]);
+    });
+
+    it('should unescape', () => {
+      const parser = new TurtleParser()
+      expect(parser.baseIRI).toBe(null);
+      expect(parser.factory).toBeInstanceOf(DataFactory);
+      const abc = '<a\\u0062\\U00000063>';
+      const ghi = '"g\\u0068\\U00000069"';
+      const [parseTree, quads] = parser.parse(abc + ' <def> ' + ghi + ' .');
+      const triple1 = parseTree.statementList[0];
+      const s = triple1.subject;
+      expect(s.value).toEqual("abc");
+      expect(s.origText).toEqual('<a\\u0062\\U00000063>');
+      const o = triple1.predicateObjectList[0].objectList[0];
+      expect(o.String.value).toEqual("ghi");
+      expect(o.String.origText).toEqual(ghi);
+      expect(quads).toEqual([
+        { "subject": { "termType": "NamedNode", "value": "abc" },
+          "predicate": { "termType": "NamedNode", "value": "def" },
+          "object": { "termType": "Literal", "value": "ghi", "language": "", "datatype": {
+            "termType": "NamedNode",
+            "value": "http://www.w3.org/2001/XMLSchema#string" } } }
+      ]);
+    });
+
+    it('should abort informatively on unknown lexical term', () => {
+      const parser = new TurtleParser()
+      expect(parser.baseIRI).toBe(null);
+      expect(parser.factory).toBeInstanceOf(DataFactory);
+      try {
+        const [parseTree, quads] = parser.parse('<a> <b> & .');
+        throw Error('parse() should have thrown');
+      } catch (e) {
+        expect(e.hash.text).toEqual("&");
+      }
+    });
+
+    it('should abort informatively on syntax error', () => {
+      const parser = new TurtleParser()
+      expect(parser.baseIRI).toBe(null);
+      expect(parser.factory).toBeInstanceOf(DataFactory);
+      try {
+        const [parseTree, quads] = parser.parse('<a> <b> c .');
+        throw Error('parse() should have thrown');
+      } catch (e) {
+        expect(e.hash.text).toEqual("c");
+      }
+    });
+
+    it('should abort informatively on prefix error', () => {
+      const parser = new TurtleParser()
+      expect(parser.baseIRI).toBe(null);
+      expect(parser.factory).toBeInstanceOf(DataFactory);
+      try {
+        const [parseTree, quads] = parser.parse('<a> <b> c:d .');
+        throw Error('parse() should have thrown');
+      } catch (e) {
+        // console.log(e);
+        expect(e.message).toEqual(`Parse error; unknown prefix "c:"
+<a> <b> c:d .
+--------^`);
+        expect(e.hash.text).toEqual("c:d");
+      }
+    });
+  });
+
+  describe('coverage', () => {
+    const baseIRI = 'http://localhost/some/path.ext'
+    const factory = new DataFactory();
+    const parser = new TurtleParser({baseIRI, factory})
+
+    for (const test of getTests()) {
+      if (!TESTS || test.label === TESTS || test.label.match(new RegExp(TESTS))) {
+        it(`should parse ${test.label}`, () => {
+          const [parseTree, quads] = parser.parse(test.in, test.base, test.prefixes);
+          if (DEBUG) {
+            console.log("parseTree:", JSON.stringify(parseTree, null, 2));
+            console.log("quads:", quads);
+          }
+          const rendered = origText(parseTree).join('');
+          expect(rendered).toEqual(test.in);
+          if (test.parseTree) { // console.log(JSON.stringify(parseTree))
+            expect(parseTree).toEqual(test.parseTree);
+          }
+        });
+      }
     }
-  }
+  });
 });
 
 function getTests () { return [
@@ -187,30 +287,46 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/`, parseTree:
   ]
   } },
   { label: "kitchen sink spaces", in: `
-PREFIX pre: <http://a.example/ns#> 
+PrEfIx : <http://sparql.example/#> 
+pReFiX pre: <http://sparql.example/pre#> 
+@prefix : <http://turtle.example/#> .
+@prefix pre: <http://turtle.example/pre#> .
+BaSe <http://sparql.example/base/>
+@base <//turtle.example/base/> .
 
  <url1> a pre:Class1 , pre:Class2 ; #here
   pre:p1 "cd" , "ef"@en , "gh"^^<ji> , _:xy ;
   pre:p2 <//b.example/u3> .
 
- ( 111 ( 222 333 ) 444  [ pre:p3 [ pre:p4 'p4' ] ; pre:p5 555 ] ) 
-  pre:p6 () .
- [ <a> 1, [ <b> 2 ] ].
- [ # mid-anon
- ] <b> [ # mid-anon
+(
+) <a> (
+) .
+
+<s> <p> "a", 'b', """c
+c"""@en-us, '''d
+d''', -0, 1, 2.0, 3E+0, 4.5E-6, .7E1, true, false .
+
+ ( 111 ( 222 333 ) 444  [ pre:p3 [ pre:p4 'p4' ] ; pre:p5 555 ] ) pre:p6 () .
+
+ [ <a> 1, [ <b> 2 ; <c> [ <d> 3 ] ] ].
+
+ [
+ ] <b> [
  ] .
+
 # [] <c> 3 , "chat" ^^ pre:dt .
 # [ <c> 3 , "chat" ^^ pre:dt, [ <d> 4 ] , "chat" @en ] . 
 ` },
   { label: "kitchen sink comments", in: `
-PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/
+/*0*/PREFIX/*1*/pre:/*2*/<http://a.example/ns#>/*3*/
 
-/*a*/<url1>/*b*/a/*c*/pre:Class1/*d*/,/*e*/pre:Class2/*f*/; #here
-  pre:p1 "cd" , _:xy ;
-  pre:p2 <//b.example/u3> .
+/*0*/<url1>/*1*/a/*2*/pre:Class1/*3*/,/*4*/pre:Class2/*5*/;/*6*/
+/*7*/pre:p1/*8*/"cd"/*9*/,/*10*/_:xy/*11*/;/*12*/
+/*13*/pre:p2/*14*/<//b.example/u3>/*15*/./*16*/
 
-/*a*/(/*b*/111/*c*/(/*d*/222/*e*/333/*f*/)/*g*/444/*h*/[/*i*/pre:p3/*j*/[/*k*/pre:p4/*k*/'p4'/*m*/]/*n*/;/*o*/pre:p5/*p*/555/*q*/]/*r*/)/*i*/
-  pre:p6 () .
- [ <a> 1 ] <b> 2 . # [ <c> 3 , "chat" ^^ pre:dt, [ <d> 4 ] , "chat" @en ] . 
+/*0*/(/*1*/111/*2*/(/*3*/222/*4*/333/*5*/)/*6*/444/*7*/[/*8*/pre:p3/*9*/[/*10*/pre:p4/*11*/'p4'/*12*/]/*13*/;/*14*/pre:p5/*15*/555/*16*/]/*17*/)/*18*/
+
+/*0*/pre:p6/*1*/(/*2*/)/*3*/./*4*/
+/*0*/[/*1*/<a>/*2*/1/*3*/]/*4*/<b>/*5*/2/*6*/./*7*/#/*8*/[/*9*/<c>/*10*/3/*11*/,/*12*/"chat"/*13*/^^/*14*/pre:dt,/*15*/[/*16*/<d>/*17*/4/*18*/]/*19*/,/*20*/"chat"/*21*/@en/*22*/]/*23*/./*24*/
 ` },
 ]; }

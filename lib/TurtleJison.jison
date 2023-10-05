@@ -77,18 +77,18 @@
 
 COMMENT                 '#' [^\u000a\u000d]* | "/*" ([^*] | '*' ([^/] | '\\/'))* "*/"
 WS                      \s+
-LANGTAG                 "@"([A-Za-z])+(("-"([0-9A-Za-z])+))*
-INTEGER                 ([+-])?([0-9])+
-DECIMAL                 ([+-])?([0-9])*"."([0-9])+
-EXPONENT                [Ee]([+-])?([0-9])+
-DOUBLE                  ([+-])?((([0-9])+"."([0-9])*({EXPONENT}))|((".")?([0-9])+({EXPONENT})))
+LANGTAG                 "@" [A-Za-z]+ ( "-" [0-9A-Za-z]+ )*
+INTEGER                 [+-]? [0-9]+
+DECIMAL                 [+-]? [0-9]* "." [0-9]+
+EXPONENT                [Ee] [+-]?[0-9]+
+DOUBLE                  [+-]? ( [0-9]+ "." [0-9]* {EXPONENT} | "."? [0-9]+ {EXPONENT} )
 ECHAR                   "\\"[\"\'\\bfnrt]
 ANON                    "[" ({WS}|{COMMENT})* "]"
 PN_CHARS_BASE           [A-Z] | [a-z] | [\u00c0-\u00d6] | [\u00d8-\u00f6] | [\u00f8-\u02ff] | [\u0370-\u037d] | [\u037f-\u1fff] | [\u200c-\u200d] | [\u2070-\u218f] | [\u2c00-\u2fef] | [\u3001-\ud7ff] | [\uf900-\ufdcf] | [\ufdf0-\ufffd] | [\uD800-\uDB7F][\uDC00-\uDFFF] // UTF-16 surrogates for [\U00010000-\U000effff]
-PN_CHARS_U              {PN_CHARS_BASE} | '_' | '_' /* !!! raise jison bug */
+PN_CHARS_U              {PN_CHARS_BASE} | '_' | '_'
 PN_CHARS                {PN_CHARS_U} | '-' | [0-9] | [\u00b7] | [\u0300-\u036f] | [\u203f-\u2040]
 BLANK_NODE_LABEL        '_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
-//ATBLANK_NODE_LABEL        '@_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
+//ATBLANK_NODE_LABEL      '@_:' ({PN_CHARS_U} | [0-9]) (({PN_CHARS} | '.')* {PN_CHARS})?
 PN_PREFIX               {PN_CHARS_BASE} (({PN_CHARS} | '.')* {PN_CHARS})?
 PNAME_NS                {PN_PREFIX}? ':'
 HEX                     [0-9] | [A-F] | [a-f]
@@ -98,13 +98,10 @@ UCHAR                   '\\u' {HEX} {HEX} {HEX} {HEX} | '\\U' {HEX} {HEX} {HEX} 
 STRING_LITERAL1         "'" ([^\u0027\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* "'" /* #x27=' #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL2         '"' ([^\u0022\u005c\u000a\u000d] | {ECHAR} | {UCHAR})* '"' /* #x22=" #x5C=\ #xA=new line #xD=carriage return */
 STRING_LITERAL_LONG1    "'''" (("'" | "''")? ([^\'\\] | {ECHAR} | {UCHAR}))* "'''"
-//NON_TERMINATED_STRING_LITERAL_LONG1    "'''"
 STRING_LITERAL_LONG2    '"""' (('"' | '""')? ([^\"\\] | {ECHAR} | {UCHAR}))* '"""'
-//NON_TERMINATED_STRING_LITERAL_LONG2    '"""'
 
 SPARQL_BASE             [Bb][Aa][Ss][Ee]
 SPARQL_PREFIX           [Pp][Rr][Ee][Ff][Ii][Xx]
-// IRIREF                    '<' 'http://a.example/ns' '>'
 IRIREF                  '<' ([^\u0000-\u0020<>\"{}|^`\\] | {UCHAR})* '>' /* #x00=NULL #01-#x1F=control codes #x20=space */
 PN_LOCAL_ESC            '\\' ('_' | '~' | '.' | '-' | '!' | '$' | '&' | "'" | '(' | ')' | '*' | '+' | ',' | ';' | '=' | '/' | '?' | '#' | '@' | '%')
 PLX                     {PERCENT} | {PN_LOCAL_ESC}
@@ -115,35 +112,30 @@ PNAME_LN                {PNAME_NS} {PN_LOCAL}
 
 %%
 
-{WS}           {
-  // space eaten by whitespace and comments
-  if (yy.skipped.last_line === yylloc.first_line &&
-      yy.skipped.last_column === yylloc.first_column) {
-    // immediately follows a skipped span
-    yy.skipped.last_line = yylloc.last_line;
-    yy.skipped.last_column = yylloc.last_column;
-  } else {
-    // follows something else
-    yy.skipped = yylloc
-  };
-  yytext = {type: "ws", origText: yytext};
-  return 'WS';
-}
-{COMMENT}           {
-  // space eaten by whitespace and comments
-  if (yy.skipped.last_line === yylloc.first_line &&
-      yy.skipped.last_column === yylloc.first_column) {
-    // immediately follows a skipped span
-    yy.skipped.last_line = yylloc.last_line;
-    yy.skipped.last_column = yylloc.last_column;
-  } else {
-    // follows something else
-    yy.skipped = yylloc
-  };
-  yytext = {type: "comment", origText: yytext};
-  return 'COMMENT';
-}
+{WS}                    yytext = yy.skip('ws', yytext, yylloc); return 'WS'
+{COMMENT}               yytext = yy.skip('comment', yytext, yylloc); return 'COMMENT'
+"true"                  yytext = { type: "boolean", origText: yytext }; return 'IT_true';
+"false"                 yytext = { type: "boolean", origText: yytext }; return 'IT_false';
+{SPARQL_PREFIX}         yytext = { type: "KEYWORD", origText: yytext }; return 'SPARQL_PREFIX';
+{SPARQL_BASE}           yytext = { type: "KEYWORD", origText: yytext }; return 'SPARQL_BASE';
+"@base"                 yytext = { type: "KEYWORD", origText: yytext }; return 'BASE';
+"@prefix"               yytext = { type: "KEYWORD", origText: yytext }; return 'PREFIX';
+
 {ANON}                  yytext = yy.createBlankNode("ANON", yytext); return 'ANON';
+{IRIREF}                yytext = yy.createRelativeIri(yytext); return 'IRIREF';
+{PNAME_LN}              yytext = yy.parsePName(yytext); return 'PNAME_LN';
+{PNAME_NS}              yytext = yy.parsePrefix(yytext); return 'PNAME_NS';
+{BLANK_NODE_LABEL}      yytext = yy.createBlankNode("BLANK_NODE_LABEL", yytext); return 'BLANK_NODE_LABEL';
+{LANGTAG}               yytext = { type: "LANGTAG", value: yytext.substring(1), origText: yytext }; return 'LANGTAG';
+{DOUBLE}                yytext = { type: "DOUBLE",  value: yytext, origText: yytext }; return 'DOUBLE';
+{DECIMAL}               yytext = { type: "DECIMAL", value: yytext, origText: yytext }; return 'DECIMAL';
+{INTEGER}               yytext = { type: "INTEGER", value: yytext, origText: yytext }; return 'INTEGER';
+{STRING_LITERAL_LONG1}  yytext = { type: "STRING_LITERAL_LONG1", value: yy.unescapeString(yytext, 3), origText: yytext }; return 'STRING_LITERAL_LONG1';
+{STRING_LITERAL_LONG2}  yytext = { type: "STRING_LITERAL_LONG2", value: yy.unescapeString(yytext, 3), origText: yytext }; return 'STRING_LITERAL_LONG2';
+{STRING_LITERAL1}       yytext = { type: "STRING_LITERAL1", value: yy.unescapeString(yytext, 1), origText: yytext }; return 'STRING_LITERAL1';
+{STRING_LITERAL2}       yytext = { type: "STRING_LITERAL2", value: yy.unescapeString(yytext, 1), origText: yytext }; return 'STRING_LITERAL2';
+
+"a"                     yytext = { type: "keyword", origText: yytext }; return 'RDF_TYPE';
 "."                     yytext = { type: "token", origText: yytext }; return 'GT_DOT';
 ";"                     yytext = { type: "token", origText: yytext }; return 'GT_SEMI';
 ","                     yytext = { type: "token", origText: yytext }; return 'GT_COMMA';
@@ -152,25 +144,6 @@ PNAME_LN                {PNAME_NS} {PN_LOCAL}
 "("                     yytext = { type: "startCollection", origText: yytext }; return 'GT_LPAREN';
 ")"                     yytext = { type: "endCollection", origText: yytext }; return 'GT_RPAREN';
 "^^"                    yytext = { type: "token", origText: yytext }; return 'GT_DTYPE';
-"true"                  yytext = { type: "boolean", origText: yytext }; return 'IT_true';
-"false"                 yytext = { type: "boolean", origText: yytext }; return 'IT_false';
-{SPARQL_PREFIX}         yytext = { type: "KEYWORD", origText: yytext }; return 'SPARQL_PREFIX';
-{SPARQL_BASE}           yytext = { type: "KEYWORD", origText: yytext }; return 'SPARQL_BASE';
-"@base"                 yytext = { type: "KEYWORD", origText: yytext }; return 'BASE';
-"@prefix"               yytext = { type: "KEYWORD", origText: yytext }; return 'PREFIX';
-{IRIREF}                yytext = yy.createRelativeIri(yytext); return 'IRIREF';
-{PNAME_LN}              yytext = yy.parsePName(yytext); return 'PNAME_LN';
-{PNAME_NS}              yytext = yy.parsePrefix(yytext); return 'PNAME_NS';
-{BLANK_NODE_LABEL}      yytext = yy.createBlankNode("BLANK_NODE_LABEL", yytext); return 'BLANK_NODE_LABEL';
-{LANGTAG}               yytext = { type: "LANGTAG", value: yytext.substring(1), origText: yytext }; return 'LANGTAG';
-{INTEGER}               yytext = { type: "INTEGER", value: yytext, origText: yytext }; return 'INTEGER';
-{DECIMAL}               yytext = { type: "DECIMAL", value: yytext, origText: yytext }; return 'DECIMAL';
-{DOUBLE}                yytext = { type: "DOUBLE",  value: yytext, origText: yytext }; return 'DOUBLE';
-{STRING_LITERAL1}       yytext = { type: "STRING_LITERAL1", value: yy.unescapeString(yytext, 1), origText: yytext }; return 'STRING_LITERAL1';
-{STRING_LITERAL2}       yytext = { type: "STRING_LITERAL2", value: yy.unescapeString(yytext, 1), origText: yytext }; return 'STRING_LITERAL2';
-{STRING_LITERAL_LONG1}  yytext = { type: "STRING_LITERAL_LONG1", value: yy.unescapeString(yytext, 3), origText: yytext }; return 'STRING_LITERAL_LONG1';
-{STRING_LITERAL_LONG2}  yytext = { type: "STRING_LITERAL_LONG2", value: yy.unescapeString(yytext, 3), origText: yytext }; return 'STRING_LITERAL_LONG2';
-"a"                     yytext = { type: "keyword", origText: yytext }; return 'RDF_TYPE';
 <<EOF>>                 return 'EOF';
 [a-zA-Z0-9_-]+          return 'unexpected word "'+yytext+'"';
 .                       return 'invalid character '+yytext;
@@ -221,15 +194,17 @@ directive:
 ;
 
 prefixID:
-      PREFIX PNAME_NS IRIREF GT_DOT	{
-        yy._prefixes[$2.slice(0, -1)] = $3;
+      PREFIX WSS PNAME_NS WSS IRIREF WSS GT_DOT	{
+        yy._prefixes[$3.value] = $5.value;
+        $$ = [{ "type": "prefix", keyword: $1, ws1: $2, prefix: $3, ws2: $4, namespace: $5, ws3: $6, dot: $7 }];
       }
 ;
 
 base:
-      BASE IRIREF GT_DOT	{
+      BASE WSS IRIREF WSS GT_DOT	{
         yy._setBase(yy._base === null ||
-                    absoluteIRI.test($2.slice(1, -1)) ? $2.slice(1, -1) : yy._resolveIRI($2.slice(1, -1)));
+                    absoluteIRI.test($3.value.slice(1, -1)) ? $3.value.slice(1, -1) : yy._resolveIRI($3.value.slice(1, -1)));
+        $$ = [{ "type": "base", keyword: $1, ws1: $2, base: $3, ws2: $4, dot: $5 }];
       }
 ;
 
@@ -241,9 +216,10 @@ sparqlPrefix:
 ;
 
 sparqlBase:
-      SPARQL_BASE IRIREF	{
+      SPARQL_BASE WSS IRIREF	{
         yy._setBase(yy._base === null ||
-                    absoluteIRI.test($2.slice(1, -1)) ? $2.slice(1, -1) : yy._resolveIRI($2.slice(1, -1)));
+                    absoluteIRI.test($3.value.slice(1, -1)) ? $3.value.slice(1, -1) : yy._resolveIRI($3.value.slice(1, -1)));
+        $$ = [{ "type": "sparqlBase", keyword: $1, ws1: $2, base: $3 }];
       }
 ;
 
