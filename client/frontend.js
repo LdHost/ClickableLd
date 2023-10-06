@@ -35,5 +35,18 @@ async function renderDoc (url) {
   const body = await resp.text();
   if (!resp.ok)
     throw Error(`fetch(${url}) => ${resp.code}:\n${body}`);
-  RenderClickableLd(document.location.href, QS('.clickable'), body, 'text/turtle');
+  new RenderClickableLd(document, document.location.href, body, 'text/turtle', {
+    sparqlPrefix: ".",
+    skipped: ".",
+    namespace: ".",
+    "relativeUrl": "url",
+    "pname": "pname",
+    "BLANK_NODE_LABEL": "bnode",
+    "ANON": "bnode",
+    "blankNodePropertyList": "bnode",
+    "collection": "bnode",
+    "simpleLiteral": "literal",
+    "datatypedLiteral": "literal",
+    "langTagLiteral": "literal",
+  }).render(QS('.clickable'));
 }

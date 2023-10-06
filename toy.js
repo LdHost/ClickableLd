@@ -7,18 +7,7 @@ const factory = new DataFactory();
 const parser = new TurtleParser({baseIRI, factory})
 
 console.log('--------------------');
-const text = `
-PrEfIx : <http://sparql.example/#> 
-pReFiX pre: <http://sparql.example/pre#> 
-@prefix : <http://turtle.example/#> .
-@prefix pre: <http://turtle.example/pre#> .
-BaSe <http://sparql.example/base/>
-@base <//turtle.example/base/> .
-
-<s> <p> "a", 'b', """c
-c"""@en-us, '''d
-d''', -0, 1, 2.0, 3E+0, 4.5E-6, .7E1 .
-`;
+const text = `PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<p>_:o,[<p1><o1>],(),(1),1,"1","1"^^<http://www.w3.org/2001/XMLSchema#integer>,"1"@en,true.`;
 const [parseTree, quads] = parser.parse(text, baseIRI, {"g": "http://a.example/g#"});
 console.log('--------------------');
 const orig = origText(parseTree).join('');

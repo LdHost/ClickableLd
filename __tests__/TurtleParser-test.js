@@ -135,16 +135,34 @@ describe('TurtleParser', () => {
 function getTests () { return [
   { label: "empty", in: ``, parseTree: {statementList: []} },
   { label: "prefix", in: `
-PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/`, parseTree:
+PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/<s><p><o>.`, parseTree:
     {"statementList":[
       {"type":"ws","origText":"\n"},
       {"type":"sparqlPrefix","keyword":{"type":"KEYWORD","origText":"PREFIX"},
        "ws1":[{"type":"comment","origText":"/*a*/"}],
        "prefix":{"type":"prefix","value":"pre","origText":"pre:"},
        "ws2":[{"type":"comment","origText":"/*b*/"}],
-       "namespace":{"type":"relativeUrl","value":"http://a.example/ns#","origText":"<http://a.example/ns#>","term":{"termType":"NamedNode","value":"http://a.example/ns#"}}
+       "namespace":{
+         "type":"relativeUrl","value":"http://a.example/ns#","origText":"<http://a.example/ns#>",
+         "term":{"termType":"NamedNode","value":"http://a.example/ns#"}}
       },
-      {"type":"comment","origText":"/*c*/"}
+      {"type":"comment","origText":"/*c*/"},
+      {"type":"subject_predicateObjectList",
+       "subject":{
+         "type": "pname","value":"http://a.example/ns#s",
+         "prefix": {"type": "prefix", "value": "pre", "origText": "pre:"},
+         "localName": { "type": "localName", "value": "s", "origText": "s" }
+       },"ws1":[],"predicateObjectList":[
+         {"type":"verb_objectList",
+          "verb":{
+            "type":"relativeUrl","value":"http://a.example/ns#p","origText":"<#p>",
+            "term":{"termType":"NamedNode","value":"http://a.example/ns#p"}},
+          "ws1":[],"objectList":[
+            {"type":"relativeUrl","value":"http://a.example/ns#o","origText":"<#o>",
+             "term":{"termType":"NamedNode","value":"http://a.example/ns#o"}}
+          ]}
+       ]},
+      {"type":"token","origText":"."},
     ]} },
   { label: "spo", in: `<#s><#p><#o>.`, base: 'http://a.example/ns', parseTree:
     {"statementList":[
