@@ -25,27 +25,33 @@ class RenderClickableLd {
   }
 
   renderStatementList (statementList, element) {
+    const ret = this.span("statementList", element);
     for (const statementOrWs of statementList) {
-      this.renderStatement(statementOrWs, element);
+      this.renderStatement(statementOrWs, ret);
     }
+    return ret;
   }
 
   renderStatement (statementOrWs, element) {
+    const ret = this.span("statement", element);
     const expected = [
       "ws",  "comment",
-      "n3Prefix", "n3Base", "sparqlPrefix", "sparqlBase", "collection_predicateObjectList", "subject_predicateObjectList"
+      "n3Prefix", "n3Base", "sparqlPrefix", "sparqlBase", "collection_predicateObjectList", "subject_predicateObjectList",
+      "token",
     ];
     switch (statementOrWs.type) {
-    case expected[0]: this.renderSkippedElt(statementOrWs, element); break; // "ws"
-    case expected[1]: this.renderSkippedElt(statementOrWs, element); break; // "comment"
-    case expected[2]: this.renderDirective(statementOrWs, element); break; // prefix
-    case expected[3]: this.renderDirective(statementOrWs, element); break; // base
-    case expected[4]: this.renderDirective(statementOrWs, element); break; // sparqlPrefix
-    case expected[5]: this.renderDirective(statementOrWs, element); break; // sparqlBase
+    case expected[0]: this.renderSkippedElt(statementOrWs, ret); break; // "ws"
+    case expected[1]: this.renderSkippedElt(statementOrWs, ret); break; // "comment"
+    case expected[2]: this.renderDirective(statementOrWs, ret); break; // prefix
+    case expected[3]: this.renderDirective(statementOrWs, ret); break; // base
+    case expected[4]: this.renderDirective(statementOrWs, ret); break; // sparqlPrefix
+    case expected[5]: this.renderDirective(statementOrWs, ret); break; // sparqlBase
     case expected[6]: // collection_predicateObjectList - TODO: remove?
-    case expected[7]: this.renderSubject_predicateObjectList(statementOrWs); break; // "subject_predicateObjectList"
+    case expected[7]: this.renderSubject_predicateObjectList(statementOrWs, ret); break; // "subject_predicateObjectList"
+    case expected[8]: this.renderToken(statementOrWs, element); break; // token ('.')
     default: throw new UnexpectedType(statementOrWs, expected);
     }
+    return ret;
   }
 
   renderDirective (statementOrWs, element) {
@@ -85,23 +91,114 @@ class RenderClickableLd {
     return ret;
   }
 
+  renderSubject_predicateObjectList (subject_predicateObjectList, element) {
+    const ret = this.span("subject_predicateObjectList", element);
+    this.renderSubject(subject_predicateObjectList.subject, ret);
+    this.renderSkippedList(subject_predicateObjectList.ws1, ret);
+    this.renderPredicateObjectListList(subject_predicateObjectList.predicateObjectList, ret);
+    return ret;
+  }
+
+  renderSubject (subject, element) {
+    const ret = this.span("subject", element);
+    this.renderTerm(subject, ret);
+    return ret;
+  }
+
+  renderPredicateObjectListList (predicateObjectListListList, element) {
+    const ret = this.span("statementList", element);
+    for (const verbObjectListOrSemiOrWs of predicateObjectListListList) {
+      this.renderVerbObjectListOrSemiOrWs(verbObjectListOrSemiOrWs, ret);
+    }
+    return ret;
+  }
+
+  renderVerbObjectListOrSemiOrWs (verbObjectListOrSemiOrWs, element) {
+    const expected = [
+      "ws",  "comment",
+      "verb_objectList", "token"
+    ];
+    switch (verbObjectListOrSemiOrWs.type) {
+    case expected[0]: this.renderSkippedElt(verbObjectListOrSemiOrWs, element); break; // "ws"
+    case expected[1]: this.renderSkippedElt(verbObjectListOrSemiOrWs, element); break; // "comment"
+    case expected[2]: this.renderVerbObjectList(verbObjectListOrSemiOrWs, element); break; // verb_objectList
+    case expected[3]: this.renderToken(verbObjectListOrSemiOrWs, element); break; // token (';')
+    default: throw new UnexpectedType(verbObjectListOrSemiOrWs, expected);
+    }
+  }
+
+  renderVerbObjectList (predicateObjectList, element) {
+    const ret = this.span("predicateObjectList", element);
+    this.renderVerb(predicateObjectList.verb, ret);
+    this.renderSkippedList(predicateObjectList.ws1, ret);
+    this.renderObjectList(predicateObjectList.objectList, ret);
+    return ret;
+  }
+
+  renderVerb (verb, element) {
+    const ret = this.span("verb", element);
+    this.renderTerm(verb, ret); // renderIriForm?
+    return ret;
+  }
+
+  renderObjectList (objectList, element) {
+    const ret = this.span("objectList", element);
+    for (const objectOrCommaOrWs of objectList) {
+      this.renderObjectOrCommaOrWs(objectOrCommaOrWs, ret);
+    }
+    return ret;
+  }
+
+  renderObjectOrCommaOrWs (objectOrCommaOrWs, element) {
+    const expected = [
+      "ws",  "comment",
+      "relativeUrl",  "pname", "a",
+      "BLANK_NODE_LABEL", "ANON", "blankNodePropertyList", "collection",
+      "simpleLiteral", "datatypedLiteral", "langTagLiteral",
+      "token",
+    ];
+    switch (objectOrCommaOrWs.type) {
+    case expected[0]: this.renderSkippedElt(objectOrCommaOrWs, element); break; // "ws"
+    case expected[1]: this.renderSkippedElt(objectOrCommaOrWs, element); break; // "comment"
+    case expected[2]: this.renderObject(objectOrCommaOrWs, element); break; // relativeUrl
+    case expected[3]: this.renderObject(objectOrCommaOrWs, element); break; // pname
+    case expected[4]: this.renderObject(objectOrCommaOrWs, element); break; // a
+    case expected[5]: this.renderObject(objectOrCommaOrWs, element); break; // BLANK_NODE_LABEL
+    case expected[6]: this.renderObject(objectOrCommaOrWs, element); break; // ANON
+    case expected[7]: this.renderObject(objectOrCommaOrWs, element); break; // blankNodePropertyList
+    case expected[8]: this.renderObject(objectOrCommaOrWs, element); break; // collection
+    case expected[9]: this.renderObject(objectOrCommaOrWs, element); break; // simpleLiteral
+    case expected[10]: this.renderObject(objectOrCommaOrWs, element); break; // datatypedLiteral
+    case expected[11]: this.renderObject(objectOrCommaOrWs, element); break; // langTagLiteral
+    case expected[12]: this.renderToken(objectOrCommaOrWs, element); break; // token (',')
+    default: throw new UnexpectedType(objectOrCommaOrWs, expected);
+    }
+  }
+
+  renderObject (object, element) {
+    const ret = this.span("object", element);
+    this.renderTerm(object, ret);
+    return ret;
+  }
+
   renderTerm (term, element) {
     const expected = [
-      "relativeUrl",  "pname",
+      "relativeUrl",  "pname", "a",
       "BLANK_NODE_LABEL", "ANON", "blankNodePropertyList", "collection",
       "simpleLiteral", "datatypedLiteral", "langTagLiteral"
     ];
     const ret = this.span("term", element);
     switch (term.type) {
-    case expected[0]: this.renderRelativeUrl(term, element); break; // relativeUrl
-    case expected[1]: this.renderPname(term, element); break; // pname
-    case expected[2]: this.renderBLANK_NODE_LABEL(term, element); break; // BLANK_NODE_LABEL
-    case expected[3]: this.renderANON(term, element); break; // ANON
-    case expected[4]: this.renderBlankNodePropertyList(term, element); break; // blankNodePropertyList
-    case expected[5]: this.renderCollection(term, element); break; // collection
-    case expected[6]: this.renderSimpleLiteral(term, element); break; // simpleLiteral
-    case expected[7]: this.renderDatatypedLiteral(term, element); break; // datatypedLiteral
-    case expected[8]: this.renderLangTagLiteral(term, element); break; // langTagLiteral
+    case expected[0]: this.renderRelativeUrl(term, ret); break; // relativeUrl
+    case expected[1]: this.renderPname(term, ret); break; // pname
+    case expected[2]: this.renderA(term, ret); break; // a
+    case expected[3]: this.renderBLANK_NODE_LABEL(term, ret); break; // BLANK_NODE_LABEL
+    case expected[4]: this.renderANON(term, ret); break; // ANON
+    case expected[5]: this.renderBlankNodePropertyList(term, ret); break; // blankNodePropertyList
+    case expected[6]: this.renderCollection(term, ret); break; // collection
+    case expected[7]: this.renderSimpleLiteral(term, ret); break; // simpleLiteral
+    case expected[8]: this.renderDatatypedLiteral(term, ret); break; // datatypedLiteral
+    case expected[9]: this.renderLangTagLiteral(term, ret); break; // langTagLiteral
     default: throw new UnexpectedType(term, expected);
     }
     return ret;
@@ -120,13 +217,25 @@ class RenderClickableLd {
     return ret;
   }
 
-  renderLocalName (localName, element) {
-    const ret = this.span("localName", element);
-    this.renderTerm(localName, ret); // renderIriForm?
+  renderA (a, element) {
+    const ret = this.span("a", element);
+    ret.innerText = a.origText;
     return ret;
   }
 
-  renderBLANK_NODE_LABEL (LABEL, element) {
+  renderRelativeUrl (relativeUrl, element) {
+    const ret = this.span("relativeUrl", element);
+    ret.innerText = relativeUrl.origText;
+    return ret;
+  }
+
+  renderLocalName (localName, element) {
+    const ret = this.span("localName", element);
+    ret.innerText = localName.origText; // renderIriForm?
+    return ret;
+  }
+
+  renderBLANK_NODE_LABEL (BLANK_NODE_LABEL, element) {
     const ret = this.span("BLANK_NODE_LABEL", element);
     ret.innerText = BLANK_NODE_LABEL.origText;
     return ret;
@@ -140,7 +249,10 @@ class RenderClickableLd {
 
   renderBlankNodePropertyList (blankNodePropertyList, element) {
     const ret = this.span("blankNodePropertyList", element);
-    ret.innerText = blankNodePropertyList.origText;
+    this.renderToken(blankNodePropertyList.startToken, ret);
+    this.renderSkippedList(blankNodePropertyList.ws1, ret);
+    this.renderPredicateObjectListList(blankNodePropertyList.predicateObjectList, ret);
+    this.renderToken(blankNodePropertyList.endToken, ret);
     return ret;
   }
 
@@ -165,7 +277,7 @@ class RenderClickableLd {
   renderDatatypedLiteral (datatypedLiteral, element) {
     const ret = this.span("datatypedLiteral", element);
     this.renderString(datatypedLiteral.String, ret);
-    this.renderDatatype(datatypedLiteral.String, ret);
+    this.renderDatatype(datatypedLiteral.datatype, ret);
     return ret;
   }
 
@@ -177,15 +289,39 @@ class RenderClickableLd {
   }
 
   renderDatatype (datatype, element) {
-    const ret = this.span("datatype", element);
-    this.renderTerm(datatype, ret); // renderIriForm?
+    const expected = [
+      "BuiltInDatatype", "ParsedDatatype"
+    ];
+    switch (datatype.type) {
+    case expected[0]: this.renderBuiltInDatatype(datatype, element); break; // "BuiltInDatatype"
+    case expected[1]: this.renderParsedDatatype(datatype, element); break; // "ParsedDatatype"
+    default: throw new UnexpectedType(datatype, expected);
+    }
+  }
+
+  renderBuiltInDatatype (datatype, element) {
+    const ret = this.span("BuiltInDatatype", element);
+    // not rendered in Turtle because the String implied the datatype
+    // ret.innerText = datatype.value;
     return ret;
   }
 
+  renderParsedDatatype (datatype, element) {
+    const ret = this.span("ParsedDatatype", element);
+    this.renderToken(datatype.token, ret);
+    this.renderTerm(datatype.iri, ret); // renderIriForm?
+    return ret;
+  }
 
   renderLanguage (language, element) {
     const ret = this.span("language", element);
     ret.innerText = language.origText; // or '@' + value
+    return ret;
+  }
+
+  renderToken (token, element) {
+    const ret = this.span("token", element);
+    ret.innerText = token.origText;
     return ret;
   }
 
@@ -237,40 +373,6 @@ class RenderClickableLd {
     return ret;
   }
 }
-
-/*
-function renderSubject_predicateObjectList (subject) {
-}
-"subject": { "type": "relativeUrl", "value": "a", "origText": "<a>",
-                         "term": { "termType": "NamedNode", "value": "a" } },
-
-"ws1": [ { "type": "ws", "origText": " " } ],
-function renderPredicateObjectList (predicateObjectList) {
-}
-              {
-                function renderVerb_objectList (verb) {
-                }"verb": { "type": "relativeUrl", "value": "b", "origText": "<b>",
-                          "term": { "termType": "NamedNode", "value": "b" } },
-                "ws1": [ { "type": "ws", "origText": " " } ],
-
-                function renderObjectList (objectList) {
-                }
-
-                function renderTerm (term) {
-                  switch (term.type) {
-                    case 
-                  }
-                }
-                { "type": "relativeUrl", "value": "c", "origText": "<c>",
-                    "term": { "termType": "NamedNode", "value": "c" } },
-                  { "type": "ws", "origText": " " }
-                ] }
-            ] },
-          { "type": "token", "origText": "." }
-        ]
-      });
-*/
-
 
 if (typeof module !== "undefined") {
   module.exports = {

@@ -235,7 +235,7 @@ collection_SUBJECT:
 ;
 
 blankNodePropertyList_SUBJECT:
-      blankNodePropertyList	{ yy.setSubject($1.node); $$ = [$1.node].concat($1.elts); // blankNodePropertyList_SUBJECT
+      blankNodePropertyList	{ yy.setSubject($1.node); $$ = $1.elts; // blankNodePropertyList_SUBJECT
  }
 ;
 
@@ -298,7 +298,7 @@ object:
       iri	-> [yy.finishTriple($1)]
     | BlankNode	-> [yy.finishTriple($1)]
     | collection	-> [yy.finishTriple($1.node)] // object collection
-    | blankNodePropertyList	{ yy.finishTriple($1.node); $$ = [$1.node].concat($1.elts); } // blankNodePropertyList
+    | blankNodePropertyList	{ yy.finishTriple($1.node); $$ = $1.elts; } // blankNodePropertyList
     | literal	-> [yy.finishTriple($1)]
 ;
 

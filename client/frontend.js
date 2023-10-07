@@ -48,5 +48,6 @@ async function renderDoc (url) {
     "simpleLiteral": "literal",
     "datatypedLiteral": "literal",
     "langTagLiteral": "literal",
+    "BuiltInDatatype": ".",
   }).render(QS('.clickable'));
 }
