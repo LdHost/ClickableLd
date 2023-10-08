@@ -284,14 +284,10 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
       "subject": [
         { "type": "collection", "startToken": { "type": "startCollection", "origText": "(" },
           "elts": [
-            { "ws0": [],
-              "node": {
-                "type": "collection",
-                "startToken": { "type": "startCollection", "origText": "(" },
-                "elts": [], "ws1": [], "endToken": { "type": "endCollection", "origText": ")" },
-                "term": { "termType": "NamedNode", "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" } },
-              "elts": [], "ord": 0,
-              "li": { "termType": "BlankNode", "value": "df_0_0" } }
+            { "type": "collection",
+              "startToken": { "type": "startCollection", "origText": "(" },
+              "elts": [], "ws1": [], "endToken": { "type": "endCollection", "origText": ")" },
+              "term": { "termType": "NamedNode", "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" } },
           ],
           "ws1": [], "endToken": { "type": "endCollection", "origText": ")" } }
       ],
@@ -306,14 +302,10 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
             { "type": "collection",
               "startToken": { "type": "startCollection", "origText": "(" },
               "elts": [
-                { "ws0": [],
-                  "node": {
-                    "type": "collection", "startToken": { "type": "startCollection", "origText": "(" },
-                    "elts": [],
-                    "ws1": [], "endToken": { "type": "endCollection", "origText": ")" },
-                    "term": { "termType": "NamedNode", "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" } },
-                  "elts": [], "ord": 1,
-                  "li": { "termType": "BlankNode", "value": "df_0_1" } }
+                { "type": "collection", "startToken": { "type": "startCollection", "origText": "(" },
+                  "elts": [],
+                  "ws1": [], "endToken": { "type": "endCollection", "origText": ")" },
+                  "term": { "termType": "NamedNode", "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil" } },
               ],
               "ws1": [],
               "endToken": { "type": "endCollection", "origText": ")" } }
@@ -323,10 +315,11 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
   ]
   } },
   { label: "kitchen sink spaces", in: `
-PrEfIx : <http://sparql.example/#> 
-pReFiX pre: <http://sparql.example/pre#> 
-@prefix : <http://turtle.example/#> .
+#Spellings of directives
+@prefix  :   <http://turtle.example/#>    .    
+PrEfIx  :  <http://sparql.example/#>  
 @prefix pre: <http://turtle.example/pre#> .
+pReFiX pre: <http://sparql.example/pre#> 
 BaSe <http://sparql.example/base/>
 @base <//turtle.example/base/> .
 
@@ -350,8 +343,8 @@ d''', -0, 1, 2.0, 3E+0, 4.5E-6, .7E1, true, false .
  ] <b> [
  ] .
 
-# [] <c> 3 , "chat" ^^ pre:dt .
-# [ <c> 3 , "chat" ^^ pre:dt, [ <d> 4 ] , "chat" @en ] . 
+ [] <c> 3 , "chat"^^pre:dt .
+ [ <c> 3 , "chat"^^pre:dt, [ <d> 4 ] , "chat"@en ] . 
 ` },
   { label: "kitchen sink comments", in: `
 /*0*/PREFIX/*1*/pre:/*2*/<http://a.example/ns#>/*3*/
