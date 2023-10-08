@@ -39,7 +39,6 @@ async function renderDoc (url) {
     sparqlPrefix: ".",
     skipped: ".",
     namespace: ".",
-    "relativeUrl": "url",
     "pname": "pname",
     "BLANK_NODE_LABEL": "bnode",
     "ANON": "bnode",

@@ -3,6 +3,9 @@
   <head>
     <title>Sites</title>
     <style>
+      @import url('https://fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext');
+      body { /* padding: 50px; */ font-family: Lato; }
+      pre { display: flex; }
       /*
       body {
       padding: 50px;
@@ -49,9 +52,13 @@
           padding: 0 0.5em;
       }
       */
+      .prefix { color: #228b22; }
       .prefix {font-size: smaller;}
       .base {font-size: smaller;}
-      .keyword {color: #737;}
+      .keyword, .a {color: #a020f0;}
+      .relativeUrl { color: #0000ff; }
+      .string { color: #8b2252; }
+      .localName { color: #008b8b; }
     </style>
     <script>globalThis.module = {}</script>
     <script src="./build/TurtleParser-bundle.js"></script>
@@ -59,7 +66,7 @@
     <script src="../ClickableLd.js"></script>
   </head>
   <body>
-    <h1>Sites</h1>
+    <!-- <h1>Sites</h1> -->
     <p>Now visiting <input id="page"></ibput></p>
     <div>
       <pre class="clickable">
