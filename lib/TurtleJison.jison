@@ -84,6 +84,9 @@ EXPONENT                [Ee] [+-]?[0-9]+
 DOUBLE                  [+-]? ( [0-9]+ "." [0-9]* {EXPONENT} | "."? [0-9]+ {EXPONENT} )
 ECHAR                   "\\"[\"\'\\bfnrt]
 ANON                    "[" ({WS}|{COMMENT})* "]"
+DATATYPE_MARKER         ({WS} | {COMMENT})* "^^"
+// LANGTAG_MARKER          ({WS} | {COMMENT})* {LANGTAG}
+LANGTAG_MARKER          {LANGTAG}
 PN_CHARS_BASE           [A-Z] | [a-z] | [\u00c0-\u00d6] | [\u00d8-\u00f6] | [\u00f8-\u02ff] | [\u0370-\u037d] | [\u037f-\u1fff] | [\u200c-\u200d] | [\u2070-\u218f] | [\u2c00-\u2fef] | [\u3001-\ud7ff] | [\uf900-\ufdcf] | [\ufdf0-\ufffd] | [\uD800-\uDB7F][\uDC00-\uDFFF] // UTF-16 surrogates for [\U00010000-\U000effff]
 PN_CHARS_U              {PN_CHARS_BASE} | '_' | '_'
 PN_CHARS                {PN_CHARS_U} | '-' | [0-9] | [\u00b7] | [\u0300-\u036f] | [\u203f-\u2040]
@@ -112,21 +115,22 @@ PNAME_LN                {PNAME_NS} {PN_LOCAL}
 
 %%
 
+{DATATYPE_MARKER}       yytext = yy.crackSkipped(yytext, yylloc); return 'DATATYPE_MARKER';
 {WS}                    yytext = yy.skip('ws', yytext, yylloc); return 'WS'
 {COMMENT}               yytext = yy.skip('comment', yytext, yylloc); return 'COMMENT'
+"@base"                 yytext = { type: "KEYWORD", origText: yytext }; return 'BASE';
+"@prefix"               yytext = { type: "KEYWORD", origText: yytext }; return 'PREFIX';
+{LANGTAG_MARKER}        yytext = yy.crackSkipped(yytext, yylloc); return 'LANGTAG_MARKER';
 "true"                  yytext = { type: "boolean", origText: yytext }; return 'IT_true';
 "false"                 yytext = { type: "boolean", origText: yytext }; return 'IT_false';
 {SPARQL_PREFIX}         yytext = { type: "KEYWORD", origText: yytext }; return 'SPARQL_PREFIX';
 {SPARQL_BASE}           yytext = { type: "KEYWORD", origText: yytext }; return 'SPARQL_BASE';
-"@base"                 yytext = { type: "KEYWORD", origText: yytext }; return 'BASE';
-"@prefix"               yytext = { type: "KEYWORD", origText: yytext }; return 'PREFIX';
 
 {ANON}                  yytext = yy.createBlankNode("ANON", yytext); return 'ANON';
 {IRIREF}                yytext = yy.createRelativeIri(yytext); return 'IRIREF';
 {PNAME_LN}              yytext = yy.parsePName(yytext); return 'PNAME_LN';
 {PNAME_NS}              yytext = yy.parsePrefix(yytext); return 'PNAME_NS';
 {BLANK_NODE_LABEL}      yytext = yy.createBlankNode("BLANK_NODE_LABEL", yytext); return 'BLANK_NODE_LABEL';
-{LANGTAG}               yytext = { type: "LANGTAG", value: yytext.substring(1), origText: yytext }; return 'LANGTAG';
 {DOUBLE}                yytext = { type: "DOUBLE",  value: yytext, origText: yytext }; return 'DOUBLE';
 {DECIMAL}               yytext = { type: "DECIMAL", value: yytext, origText: yytext }; return 'DECIMAL';
 {INTEGER}               yytext = { type: "INTEGER", value: yytext, origText: yytext }; return 'INTEGER';
@@ -143,7 +147,7 @@ PNAME_LN                {PNAME_NS} {PN_LOCAL}
 "]"                     yytext = { type: "endBNode", origText: yytext }; return 'GT_RBRACKET';
 "("                     yytext = { type: "startCollection", origText: yytext }; return 'GT_LPAREN';
 ")"                     yytext = { type: "endCollection", origText: yytext }; return 'GT_RPAREN';
-"^^"                    yytext = { type: "token", origText: yytext }; return 'GT_DTYPE';
+//"^^"                    yytext = { type: "token", origText: yytext }; return 'GT_DTYPE';
 <<EOF>>                 return 'EOF';
 [a-zA-Z0-9_-]+          return 'unexpected word "'+yytext+'"';
 .                       return 'invalid character '+yytext;
@@ -344,13 +348,13 @@ RDFLiteral:
 ;
 
 _O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C:
-      LANGTAG	-> { type: "langTagLiteral", attrs: { language: $1 } }
-    | GT_DTYPE iri	-> { type: "datatypedLiteral", attrs: { datatype: { type: "ParsedDatatype", token: $1, iri: $2 } } }
+      LANGTAG_MARKER	-> { type: "langTagLiteral", attrs: { language: { type: "LANGTAG", ws0: $1.ws, value: yytext.rest.substring(1), origText: $1.rest } } }
+    | DATATYPE_MARKER WSS iri	-> { type: "datatypedLiteral", attrs: { datatype: { type: "ParsedDatatype", ws0: $1.ws, token: { type: "token", origText: $1.rest }, ws1: $2, iri: $3 } } }
 ;
 
 _Q_O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C_E_Opt:
-      -> { type: "simpleLiteral", attrs: {} }
-    | _O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C	
+      	-> { type: "simpleLiteral", attrs: {} }
+    | _O_QLANGTAG_E_Or_QGT_DTYPE_E_S_Qiri_E_C	-> $1
 ;
 
 BooleanLiteral:
