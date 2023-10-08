@@ -225,12 +225,12 @@ sparqlBase:
 
 triples:
       subject WSS predicateObjectList	-> yy.finishSubject([{ type: "subject_predicateObjectList", subject: $1, ws1: $2, predicateObjectList: $3}])
-    | collection_SUBJECT WSS predicateObjectList	-> yy.finishSubject([{ type: "collection_predicateObjectList", collection: $1, ws1: $2, predicateObjectList: $3}])
+    | collection_SUBJECT WSS predicateObjectList	-> yy.finishSubject([{ type: "collection_predicateObjectList", subject: $1, ws1: $2, predicateObjectList: $3}])
     | blankNodePropertyList_SUBJECT WSS _QpredicateObjectList_E_Opt	-> yy.finishSubject($1.concat($2, $3)) // blankNodePropertyList _QpredicateObjectList_E_Opt
 ;
 
 collection_SUBJECT:
-      collection	{ yy.setSubject($1.node); $$ = [$1.node].concat($1.elts); // collection_SUBJECT
+      collection	{ yy.setSubject($1.node); $$ = $1.elts; // collection_SUBJECT
  }
 ;
 
@@ -297,7 +297,7 @@ predicate:
 object:
       iri	-> [yy.finishTriple($1)]
     | BlankNode	-> [yy.finishTriple($1)]
-    | collection	-> [yy.finishTriple($1.node)] // object collection
+    | collection	{yy.finishTriple($1.node); $$ = $1.elts} // object collection
     | blankNodePropertyList	{ yy.finishTriple($1.node); $$ = $1.elts; } // blankNodePropertyList
     | literal	-> [yy.finishTriple($1)]
 ;
@@ -326,11 +326,11 @@ _Qobject_E_Star:
 ;
 
 collectionObject:
-      iri	-> {node: $1, elts: []}
-    | BlankNode	-> {node: $1, elts: []}
+      iri	-> {node: $1, elts: [$1]}
+    | BlankNode	-> {node: $1, elts: [$1]}
     | collection	-> $1 // collection collection
     | blankNodePropertyList	-> {node: $1.node, elts: $1.elts} // collection blankNodePropertyList
-    | literal	-> {node: $1, elts: []}
+    | literal	-> {node: $1, elts: [$1]}
 ;
 
 NumericLiteral:

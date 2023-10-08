@@ -106,6 +106,23 @@ describe('TurtleParser', () => {
         expect(e.hash.text).toEqual("c:d");
       }
     });
+
+    it('should reset', () => {
+      const parser = new TurtleParser()
+      expect(parser.baseIRI).toBe(null);
+      expect(parser.factory).toBeInstanceOf(DataFactory);
+      const [parseTree0] = parser.parse(`PREFIX pre: <http://a.example/ns#>
+pre:s<#p><#o>.`);
+      expect(parseTree0.statementList[2].subject.value).toEqual("http://a.example/ns#s");
+      const [parseTree1] = parser.parse('pre:s<#p><#o>.');
+      expect(parseTree1.statementList[0].subject.value).toEqual("http://a.example/ns#s");
+      parser.reset();
+      expect(() => {
+        parser.parse('pre:s<#p><#o>.')
+      }).toThrow(`Parse error; unknown prefix "pre:"
+pre:s<#p><#o>.
+^`);
+    });
   });
 
   describe('coverage', () => {
@@ -135,7 +152,7 @@ describe('TurtleParser', () => {
 function getTests () { return [
   { label: "empty", in: ``, parseTree: {statementList: []} },
   { label: "prefix", in: `
-PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/<s><p><o>.`, parseTree:
+PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
     {"statementList":[
       {"type":"ws","origText":"\n"},
       {"type":"sparqlPrefix","keyword":{"type":"KEYWORD","origText":"PREFIX"},
@@ -155,11 +172,11 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/<s><p><o>.`, parseTree:
        },"ws1":[],"predicateObjectList":[
          {"type":"verb_objectList",
           "verb":{
-            "type":"relativeUrl","value":"http://a.example/ns#p","origText":"<#p>",
-            "term":{"termType":"NamedNode","value":"http://a.example/ns#p"}},
+            "type":"relativeUrl","value":"http://localhost/some/path.ext#p","origText":"<#p>",
+            "term":{"termType":"NamedNode","value":"http://localhost/some/path.ext#p"}},
           "ws1":[],"objectList":[
-            {"type":"relativeUrl","value":"http://a.example/ns#o","origText":"<#o>",
-             "term":{"termType":"NamedNode","value":"http://a.example/ns#o"}}
+            {"type":"relativeUrl","value":"http://localhost/some/path.ext#o","origText":"<#o>",
+             "term":{"termType":"NamedNode","value":"http://localhost/some/path.ext#o"}}
           ]}
        ]},
       {"type":"token","origText":"."},
@@ -231,7 +248,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/<s><p><o>.`, parseTree:
   { label: "()<p>().", in: `()<p>().`, parseTree: {
     "statementList": [
       { "type": "collection_predicateObjectList",
-        "collection": [
+        "subject": [
           { "type": "collection",
             "startToken": { "type": "startCollection", "origText": "(" },
             "elts": [],
@@ -263,7 +280,8 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/<s><p><o>.`, parseTree:
   } },
   { label: "(())<p>(()).", in: `(())<p>(()).`, parseTree: {
   "statementList": [
-    { "type": "collection_predicateObjectList", "collection": [
+    { "type": "collection_predicateObjectList",
+      "subject": [
         { "type": "collection", "startToken": { "type": "startCollection", "origText": "(" },
           "elts": [
             { "ws0": [],
