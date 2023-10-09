@@ -6,7 +6,8 @@ const Elts = {
 const QS = document.querySelector.bind(document);
 const QSA = document.querySelectorAll.bind(document);
 
-window.addEventListener("load", onLoad);
+// window.addEventListener("load", onLoad);
+document.addEventListener("DOMContentLoaded", onLoad);
 
 function log (className, msg) {
   const li = document.createElement('li');
@@ -35,18 +36,21 @@ async function renderDoc (url) {
   const body = await resp.text();
   if (!resp.ok)
     throw Error(`fetch(${url}) => ${resp.code}:\n${body}`);
+
   new RenderClickableLd(document, document.location.href, body, 'text/turtle', {
-    sparqlPrefix: ".",
-    skipped: ".",
-    namespace: ".",
-    "pname": "pname",
-    "BLANK_NODE_LABEL": "bnode",
-    "ANON": "bnode",
-    "blankNodePropertyList": "bnode",
-    "collection": "bnode",
-    "simpleLiteral": "literal",
-    "datatypedLiteral": "literal",
-    "langTagLiteral": "literal",
-    "BuiltInDatatype": ".",
+    sparqlPrefix: {useParent: true},
+    skipped: {useParent: true},
+    namespace: {useParent: true},
+    statement: {useParent: true},
+    BuiltInDatatype: {useParent: true},
+
+    pname: { className: "pname" },
+    BLANK_NODE_LABEL: { className: "bnode" },
+    ANON: { className: "bnode" },
+    blankNodePropertyList: { className: "bnode" },
+    collection: { className: "bnode" },
+    simpleLiteral: { className: "literal" },
+    datatypedLiteral: { className: "literal" },
+    langTagLiteral: { className: "literal" },
   }).render(QS('.clickable'));
 }

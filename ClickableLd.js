@@ -7,12 +7,14 @@ class UnexpectedType extends Error {
 }
 
 class RenderClickableLd {
-  constructor (dom, baseIRI, text, mediaType, classSubstitutions = {}) {
+  static UseParent = ".";
+
+  constructor (dom, baseIRI, text, mediaType, elementControls = {}) {
     this.dom = dom;
     this.baseIRI = baseIRI;
     this.text = text;
     this.mediaType = mediaType;
-    this.classSubstitutions = classSubstitutions;
+    this.elementControls = elementControls;
   }
 
   render (element) {
@@ -361,16 +363,29 @@ class RenderClickableLd {
     return ret;
   }
 
-  span (className, parent, attrs = {}) {
-    const nm = className in this.classSubstitutions ? this.classSubstitutions[className] : className;
-    if (nm === ".") // no new span for this class
-      return parent;
+  // note early retur for UseParent
+  span (elementType, parent, attrs = {}) {
+    const control = this.elementControls[elementType];
 
-    const ret = this.dom.createElement('span');
-    if (nm)
-      ret.classList.add(nm);
-    parent.append(ret);
-    return ret;
+    if (control) {
+      if (control.useParent)
+        return parent;
+      const ret = control.construct
+            ? control.construct(elementType, parent)
+            : this.dom.createElement(control.domType || 'span');
+
+      const className = "className" in control ? control.className : elementType;
+      if (className)
+        ret.classList.add(className);
+
+      parent.append(ret);
+      return ret;
+    } else {
+      const ret = this.dom.createElement('span');
+      ret.classList.add(elementType);
+      parent.append(ret);
+      return ret;
+    }
   }
 }
 
