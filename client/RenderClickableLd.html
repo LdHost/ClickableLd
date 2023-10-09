@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Sites</title>
+    <title>RenderClickableLd</title>
     <style>
       @import url('https://fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext');
       body { /* padding: 50px; */ font-family: Lato; }
@@ -59,6 +59,9 @@
       .relativeUrl { color: #0000ff; }
       .string { color: #8b2252; }
       .localName { color: #008b8b; }
+      #page { width: 40%; position: absolute; right: 1em; }
+      #page input { width: 90%; }
+      #messages { width: 40%; position: fixed; right: 1em; top: 20%; }
     </style>
     <script>globalThis.module = {}</script>
     <script src="./build/TurtleParser-bundle.js"></script>
@@ -67,15 +70,20 @@
   </head>
   <body>
     <!-- <h1>Sites</h1> -->
-    <p>Now visiting <input id="page"></ibput></p>
+    <div id="page">
+      <h2>Location</h2>
+      <a id="referrer" href="">♁</a><input></input>
+    </div>
     <div>
       <pre class="clickable">
       </pre>
     </div>
-    <div>
-      <h2 style="float:left">Messages</h2><p style="float:left; padding-top: 1.3ex; padding-left: .5em;">(most recent first)</p><div style="clear:both"/>
+    <div id="messages">
+      <div>
+        <h2 style="float:left; margin: 0;">Messages</h2><p style="float:left; padding-top: 1.3ex; padding-left: .5em; margin: 0;">(most recent first)</p><div style="clear:both"/>
+      </div>
+      <ol reversed="reversed"></ol>
     </div>
-    <ol id="messages"></ol>
     <script src="./frontend.js"></script>
   </body>
 </html>

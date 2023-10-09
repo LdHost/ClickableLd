@@ -228,9 +228,9 @@ sparqlBase:
 ;
 
 triples:
-      subject WSS predicateObjectList	-> yy.finishSubject([{ type: "subject_predicateObjectList", subject: $1, ws1: $2, predicateObjectList: $3}])
-    | collection_SUBJECT WSS predicateObjectList	-> yy.finishSubject([{ type: "collection_predicateObjectList", subject: $1, ws1: $2, predicateObjectList: $3}])
-    | blankNodePropertyList_SUBJECT WSS _QpredicateObjectList_E_Opt	-> yy.finishSubject($1.concat($2, $3)) // blankNodePropertyList _QpredicateObjectList_E_Opt
+      subject WSS predicateObjectList	-> yy.finishSubject([{ type: "triples", subject: $1, ws1: $2, predicateObjectList: $3}])
+    | collection_SUBJECT WSS predicateObjectList	-> yy.finishSubject([{ type: "triples", subject: $1, ws1: $2, predicateObjectList: $3}])
+    | blankNodePropertyList_SUBJECT WSS _QpredicateObjectList_E_Opt	-> yy.finishSubject([{ type: "triples", subject: $1, ws1: $2, predicateObjectList: $3}]) // blankNodePropertyList _QpredicateObjectList_E_Opt
 ;
 
 collection_SUBJECT:
@@ -239,7 +239,7 @@ collection_SUBJECT:
 ;
 
 blankNodePropertyList_SUBJECT:
-      blankNodePropertyList	{ yy.setSubject($1.node); $$ = $1.elts; // blankNodePropertyList_SUBJECT
+      blankNodePropertyList	{ yy.setSubject($1.node); $$ = $1.elts[0]; // blankNodePropertyList_SUBJECT
  }
 ;
 

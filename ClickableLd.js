@@ -38,7 +38,7 @@ class RenderClickableLd {
     const ret = this.span("statementOrWs", statementOrWs, element);
     const expected = [
       "ws",  "comment",
-      "n3Prefix", "n3Base", "sparqlPrefix", "sparqlBase", "collection_predicateObjectList", "subject_predicateObjectList",
+      "n3Prefix", "n3Base", "sparqlPrefix", "sparqlBase", "triples",
       "token",
     ];
     switch (statementOrWs.type) {
@@ -48,9 +48,8 @@ class RenderClickableLd {
     case expected[3]: this.renderDirective(statementOrWs, ret); break; // base
     case expected[4]: this.renderDirective(statementOrWs, ret); break; // sparqlPrefix
     case expected[5]: this.renderDirective(statementOrWs, ret); break; // sparqlBase
-    case expected[6]: // collection_predicateObjectList - TODO: remove?
-    case expected[7]: this.renderSubject_predicateObjectList(statementOrWs, ret); break; // "subject_predicateObjectList"
-    case expected[8]: this.renderToken(statementOrWs, element); break; // token ('.')
+    case expected[6]: this.renderTriples(statementOrWs, ret); break; // "triples"
+    case expected[7]: this.renderToken(statementOrWs, element); break; // token ('.')
     default: throw new UnexpectedType(statementOrWs, expected);
     }
     return ret;
@@ -93,11 +92,11 @@ class RenderClickableLd {
     return ret;
   }
 
-  renderSubject_predicateObjectList (subject_predicateObjectList, element) {
-    const ret = this.span("subject_predicateObjectList", subject_predicateObjectList, element);
-    this.renderSubject(subject_predicateObjectList.subject, ret);
-    this.renderSkippedList(subject_predicateObjectList.ws1, ret);
-    this.renderPredicateObjectListList(subject_predicateObjectList.predicateObjectList, ret);
+  renderTriples (triples, element) {
+    const ret = this.span("triples", triples, element);
+    this.renderSubject(triples.subject, ret);
+    this.renderSkippedList(triples.ws1, ret);
+    this.renderPredicateObjectListList(triples.predicateObjectList, ret);
     return ret;
   }
 

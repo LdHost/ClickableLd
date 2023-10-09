@@ -1,6 +1,8 @@
 
 const Elts = {
-  page: document.querySelector('#page')
+  pageInput: document.querySelector('#page input'),
+  renderElement: document.querySelector('.clickable'),
+  messagesList: document.querySelector('#messages ol'),
 };
 
 const QS = document.querySelector.bind(document);
@@ -17,31 +19,34 @@ function log (className, msg) {
 }
 
 async function onLoad (evt) {
-  Elts.page.oninput = inputDoc;
+  Elts.pageInput.oninput = inputDoc;
   const params = new URLSearchParams(location.search);
   const browse = params.get('browse');
   if (browse) {
-    Elts.page.value = browse;
-    inputDoc.call(Elts.page, evt);
+    Elts.pageInput.value = browse;
+    inputDoc.call(Elts.pageInput, evt);
   }
 }
 
 async function inputDoc (evt) {
   if (this.value)
-    renderDoc(this.value);
+    renderDoc(this.value, document.location.href);
 }
 
-async function renderDoc (url) {
+async function renderDoc (url, base) {
   const resp = await fetch(url);
   const body = await resp.text();
   if (!resp.ok)
     throw Error(`fetch(${url}) => ${resp.code}:\n${body}`);
 
-  new RenderClickableLd(document, document.location.href, body, 'text/turtle', {
+  message(` ${new URL(url, base).href}`);
+  Elts.renderElement.replaceChildren();
+
+  new RenderClickableLd(document, base, body, 'text/turtle', {
     sparqlPrefix: {useParent: true},
     skipped: {useParent: true},
     namespace: {useParent: true},
-    statement: {useParent: true},
+    statementOrWs: {useParent: true},
     BuiltInDatatype: {useParent: true},
 
     pname: { className: "pname" },
@@ -54,5 +59,12 @@ async function renderDoc (url) {
     simpleLiteral: { className: "literal" },
     datatypedLiteral: { className: "literal" },
     langTagLiteral: { className: "literal" },
-  }).render(QS('.clickable'));
+  }).render(Elts.renderElement);
+  document.title = url;
+}
+
+function message (content) {
+  const li = document.createElement('li');
+  li.append(content);
+  Elts.messagesList.append(li);
 }
