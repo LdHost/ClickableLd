@@ -9,7 +9,7 @@ const parser = new TurtleParser({baseIRI, factory})
 console.log('--------------------');
 // const text = `PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<p>_:o,[<p1><o1>],(),(1),1,"1","1"^^<http://www.w3.org/2001/XMLSchema#integer>,"1"@en,true.`;const text = `<x> <p> ( [ <p3> [ <p4> 'p4' ] ] ) .`;const text = `<s><p>"1"/*1*/\n/*2*/^^/*3*/\n/*4*/<dt>.`;//const text = `/*0*/(/*1*/(/*2*/1/*3*/)/*4*/2/*5*/)/*6*/<p>(()).`;
 // const text = `PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`
-const text = `[<#p1><#o1>;<#p2><#o2>]<#p3>[<#p4><#o4>;<#p5><#o5>].`;
+const text = `[<#p1>[<#p2><#o2>]]<#p3>[<#p4>[<#p5><#o5>]].`;
 const [parseTree, quads] = parser.parse(text, baseIRI, {"g": "http://a.example/g#"});
 console.log('--------------------');
 const orig = origText(parseTree).join('');
