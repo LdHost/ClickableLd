@@ -27,7 +27,7 @@ class RenderClickableLd {
   }
 
   renderStatementList (statementList, element) {
-    const ret = this.span("statementList", element);
+    const ret = this.span("statementList", statementList, element);
     for (const statementOrWs of statementList) {
       this.renderStatement(statementOrWs, ret);
     }
@@ -35,7 +35,7 @@ class RenderClickableLd {
   }
 
   renderStatement (statementOrWs, element) {
-    const ret = this.span("statement", element);
+    const ret = this.span("statementOrWs", statementOrWs, element);
     const expected = [
       "ws",  "comment",
       "n3Prefix", "n3Base", "sparqlPrefix", "sparqlBase", "collection_predicateObjectList", "subject_predicateObjectList",
@@ -56,23 +56,23 @@ class RenderClickableLd {
     return ret;
   }
 
-  renderDirective (statementOrWs, element) {
+  renderDirective (directive, element) {
     const expected = [
       "n3Prefix", "n3Base", "sparqlPrefix", "sparqlBase"
     ];
-    const ret = this.span("directive", element);
-    switch (statementOrWs.type) {
-    case expected[0]: this.renderN3Prefix(statementOrWs, ret); break; // prefix
-    case expected[1]: this.renderN3Base(statementOrWs, ret); break; // base
-    case expected[2]: this.renderSparqlPrefix(statementOrWs, ret); break; // sparqlPrefix
-    case expected[3]: this.renderSparqlBase(statementOrWs, ret); break; // sparqlBase
-    default: throw new UnexpectedType(statementOrWs, expected);
+    const ret = this.span("directive", directive, element);
+    switch (directive.type) {
+    case expected[0]: this.renderN3Prefix(directive, ret); break; // prefix
+    case expected[1]: this.renderN3Base(directive, ret); break; // base
+    case expected[2]: this.renderSparqlPrefix(directive, ret); break; // sparqlPrefix
+    case expected[3]: this.renderSparqlBase(directive, ret); break; // sparqlBase
+    default: throw new UnexpectedType(directive, expected);
     }
     return ret;
   }
 
   renderSparqlPrefix (sparqlPrefix, element) {
-    const ret = this.span("sparqlPrefix", element);
+    const ret = this.span("sparqlPrefix", sparqlPrefix, element);
     this.renderKeyword(sparqlPrefix.keyword, ret);
     this.renderSkippedList(sparqlPrefix.ws1, ret);
     this.renderPrefix(sparqlPrefix.prefix, ret);
@@ -82,19 +82,19 @@ class RenderClickableLd {
   }
 
   renderPrefix (prefix, element) {
-    const ret = this.span("prefix", element);
+    const ret = this.span("prefix", prefix, element);
     ret.innerText = prefix.origText; // or value + ':'
     return ret;
   }
 
   renderNamespace (namespace, element) {
-    const ret = this.span("namespace", element);
+    const ret = this.span("namespace", namespace, element);
     this.renderTerm(namespace, ret); // renderIriForm?
     return ret;
   }
 
   renderSubject_predicateObjectList (subject_predicateObjectList, element) {
-    const ret = this.span("subject_predicateObjectList", element);
+    const ret = this.span("subject_predicateObjectList", subject_predicateObjectList, element);
     this.renderSubject(subject_predicateObjectList.subject, ret);
     this.renderSkippedList(subject_predicateObjectList.ws1, ret);
     this.renderPredicateObjectListList(subject_predicateObjectList.predicateObjectList, ret);
@@ -102,14 +102,14 @@ class RenderClickableLd {
   }
 
   renderSubject (subject, element) {
-    const ret = this.span("subject", element);
+    const ret = this.span("subject", subject, element);
     this.renderTerm(subject, ret);
     return ret;
   }
 
-  renderPredicateObjectListList (predicateObjectListListList, element) {
-    const ret = this.span("statementList", element);
-    for (const verbObjectListOrSemiOrWs of predicateObjectListListList) {
+  renderPredicateObjectListList (predicateObjectListList, element) {
+    const ret = this.span("statementList", predicateObjectListList, element); // TODO: listlist
+    for (const verbObjectListOrSemiOrWs of predicateObjectListList) {
       this.renderVerbObjectListOrSemiOrWs(verbObjectListOrSemiOrWs, ret);
     }
     return ret;
@@ -130,7 +130,7 @@ class RenderClickableLd {
   }
 
   renderVerbObjectList (predicateObjectList, element) {
-    const ret = this.span("predicateObjectList", element);
+    const ret = this.span("predicateObjectList", predicateObjectList, element);
     this.renderVerb(predicateObjectList.verb, ret);
     this.renderSkippedList(predicateObjectList.ws1, ret);
     this.renderObjectList(predicateObjectList.objectList, ret);
@@ -138,13 +138,13 @@ class RenderClickableLd {
   }
 
   renderVerb (verb, element) {
-    const ret = this.span("verb", element);
+    const ret = this.span("verb", verb, element);
     this.renderTerm(verb, ret); // renderIriForm?
     return ret;
   }
 
   renderObjectList (objectList, element) {
-    const ret = this.span("objectList", element);
+    const ret = this.span("objectList", objectList, element);
     for (const objectOrCommaOrWs of objectList) {
       this.renderObjectOrCommaOrWs(objectOrCommaOrWs, ret);
     }
@@ -178,7 +178,7 @@ class RenderClickableLd {
   }
 
   renderObject (object, element) {
-    const ret = this.span("object", element);
+    const ret = this.span("object", object, element);
     this.renderTerm(object, ret);
     return ret;
   }
@@ -189,7 +189,7 @@ class RenderClickableLd {
       "BLANK_NODE_LABEL", "ANON", "blankNodePropertyList", "collection",
       "simpleLiteral", "datatypedLiteral", "langTagLiteral"
     ];
-    const ret = this.span("term", element);
+    const ret = this.span("term", term, element);
     switch (term.type) {
     case expected[0]: this.renderRelativeUrl(term, ret); break; // relativeUrl
     case expected[1]: this.renderPname(term, ret); break; // pname
@@ -207,84 +207,89 @@ class RenderClickableLd {
   }
 
   renderRelativeUrl (relativeUrl, element) {
-    const ret = this.span("relativeUrl", element);
+    const ret = this.span("relativeUrl", relativeUrl, element);
     ret.innerText = relativeUrl.origText;
     return ret;
   }
 
   renderPname (pname, element) {
-    const ret = this.span("pname", element);
+    const ret = this.span("pname", pname, element);
     this.renderPrefix(pname.prefix, ret);
     this.renderLocalName(pname.localName, ret);
     return ret;
   }
 
   renderA (a, element) {
-    const ret = this.span("a", element);
+    const ret = this.span("a", a, element);
     ret.innerText = a.origText;
     return ret;
   }
 
   renderRelativeUrl (relativeUrl, element) {
-    const ret = this.span("relativeUrl", element);
+    const ret = this.span("relativeUrl", relativeUrl, element);
     ret.innerText = relativeUrl.origText;
     return ret;
   }
 
   renderLocalName (localName, element) {
-    const ret = this.span("localName", element);
+    const ret = this.span("localName", localName, element);
     ret.innerText = localName.origText; // renderIriForm?
     return ret;
   }
 
   renderBLANK_NODE_LABEL (BLANK_NODE_LABEL, element) {
-    const ret = this.span("BLANK_NODE_LABEL", element);
+    const ret = this.span("BLANK_NODE_LABEL", BLANK_NODE_LABEL, element);
     ret.innerText = BLANK_NODE_LABEL.origText;
     return ret;
   }
 
   renderANON (ANON, element) {
-    const ret = this.span("ANON", element);
+    const ret = this.span("ANON", ANON, element);
     ret.innerText = ANON.origText;
     return ret;
   }
 
   renderBlankNodePropertyList (blankNodePropertyList, element) {
-    const ret = this.span("blankNodePropertyList", element);
-    this.renderToken(blankNodePropertyList.startToken, ret);
-    this.renderSkippedList(blankNodePropertyList.ws1, ret);
-    this.renderPredicateObjectListList(blankNodePropertyList.predicateObjectList, ret);
-    this.renderToken(blankNodePropertyList.endToken, ret);
-    return ret;
+    const {parentElt, startElt, endElt} = this.spanStartEnd("blankNodePropertyList", blankNodePropertyList, element, blankNodePropertyList.startToken, blankNodePropertyList.endToken);
+    if (startElt !== parentElt)
+      parentElt.append(startElt)
+    this.renderToken(blankNodePropertyList.startToken, startElt);
+    this.renderSkippedList(blankNodePropertyList.ws1, parentElt);
+    this.renderPredicateObjectListList(blankNodePropertyList.predicateObjectList, parentElt);
+    if (endElt !== parentElt)
+      parentElt.append(endElt)
+    this.renderToken(blankNodePropertyList.endToken, endElt);
+    return parentElt;
   }
 
   renderCollection (collection, element) {
-    const ret = this.span("collection", element);
-    ret.innerText = collection.origText;
-    return ret;
+    const {parentElt, startElt, endElt} = this.spanStartEnd("collection", collection, element, collection.startToken, collection.endToken);
+    throw Error('not done');
+    parentElt.innerText = collection.origText;
+    return parentElt;
   }
 
   renderString (string, element) {
-    const ret = this.span("string", element);
+    const ret = this.span("string", string, element);
     ret.innerText = string.origText;
     return ret;
   }
 
   renderSimpleLiteral (simpleLiteral, element) {
-    const ret = this.span("simpleLiteral", element);
+    const ret = this.span("simpleLiteral", simpleLiteral, element);
     this.renderString(simpleLiteral.String, ret);
     return ret;
   }
 
   renderDatatypedLiteral (datatypedLiteral, element) {
-    const ret = this.span("datatypedLiteral", element);
+    const ret = this.span("datatypedLiteral", datatypedLiteral, element);
     this.renderString(datatypedLiteral.String, ret);
     this.renderDatatype(datatypedLiteral.datatype, ret);
     return ret;
   }
 
   renderLangTagLiteral (langTagLiteral, element) {
-    const ret = this.span("langTagLiteral", element);
+    const ret = this.span("langTagLiteral", langTagLiteral, element);
     this.renderString(langTagLiteral.String, ret);
     this.renderLanguage(langTagLiteral.language, ret);
     return ret;
@@ -302,33 +307,33 @@ class RenderClickableLd {
   }
 
   renderBuiltInDatatype (datatype, element) {
-    const ret = this.span("BuiltInDatatype", element);
+    const ret = this.span("datatype", datatype, element);
     // not rendered in Turtle because the String implied the datatype
     // ret.innerText = datatype.value;
     return ret;
   }
 
   renderParsedDatatype (datatype, element) {
-    const ret = this.span("ParsedDatatype", element);
+    const ret = this.span("datatype", datatype, element);
     this.renderToken(datatype.token, ret);
     this.renderTerm(datatype.iri, ret); // renderIriForm?
     return ret;
   }
 
   renderLanguage (language, element) {
-    const ret = this.span("language", element);
+    const ret = this.span("language", language, element);
     ret.innerText = language.origText; // or '@' + value
     return ret;
   }
 
   renderToken (token, element) {
-    const ret = this.span("token", element);
+    const ret = this.span("token", token, element);
     ret.innerText = token.origText;
     return ret;
   }
 
   renderSkippedList (skippedList, element) {
-    const ret = this.span("skippedList", element);
+    const ret = this.span("skippedList", skippedList, element);
     for (const skippedElt of skippedList)
       this.renderSkippedElt(skippedElt, ret);
     return ret;
@@ -336,7 +341,7 @@ class RenderClickableLd {
 
   renderSkippedElt (skippedElt, element) {
     const expected = ["ws",  "comment"];
-    const ret = this.span("skippedElt", element);
+    const ret = this.span("skippedElt", skippedElt, element);
     switch (skippedElt.type) {
     case expected[0]: this.renderWs(skippedElt, ret); break; // ws
     case expected[1]: this.renderComment(skippedElt, ret); break; // comment
@@ -346,44 +351,83 @@ class RenderClickableLd {
   }
 
   renderWs (ws, element) {
-    const ret = this.span("ws", element);
+    const ret = this.span("ws", ws, element);
     ret.innerText = ws.origText;
     return ret;
   }
 
   renderComment (comment, element) {
-    const ret = this.span("comment", element);
+    const ret = this.span("comment", comment, element);
     ret.innerText = comment.origText;
     return ret;
   }
 
   renderKeyword (keyword, element) {
-    const ret = this.span("keyword", element);
+    const ret = this.span("keyword", keyword, element);
     ret.innerText = keyword.origText;
     return ret;
   }
 
   // note early retur for UseParent
-  span (elementType, parent, attrs = {}) {
+  spanStartEnd (elementType, turtleElement, parentDomElement, attrs = {}, startToken, endToken) {
     const control = this.elementControls[elementType];
 
     if (control) {
       if (control.useParent)
-        return parent;
+        return {parentElt: parentDomElement, startElt: parentDomElement, endElt: parentDomElement};
+      if (!control.construct)
+        return makeTree (this, elementType);
+      const {parentElt, startElt, endElt} = control.construct(elementType, turtleElement, parentDomElement, startToken, endToken);
+
+      const parentName = "className" in control ? control.className : elementType;
+      if (parentName)
+        parentElt.classList.add(parentName);
+      const startClassNameAttr = "className/start"
+      const startName = startClassNameAttr in control ? control[startClassNameAttr] : elementType;
+      if (startName)
+        startElt.classList.add(startName);
+
+      const endClassNameAttr = "className/end"
+      const endName = endClassNameAttr in control ? control[endClassNameAttr] : elementType;
+      if (endName)
+        endElt.classList.add(endName);
+
+      parentDomElement.append(parentElt);
+      return {parentElt, startElt, endElt};
+    } else {
+      return makeTree(this, elementType)
+    }
+
+    function makeTree (self, type) {
+      const parentElt = self.span(elementType, turtleElement, parentDomElement, attrs);
+      const startElt = self.span(elementType + "/start", startToken, parentElt, attrs, true);
+      const endElt = self.span(elementType + "/end", endToken, parentElt, attrs, true);
+      return {parentElt, startElt, endElt};
+    }
+  }
+
+  span (elementType, turtleElement, parentDomElement, attrs = {}, _noAdd = false) {
+    const control = this.elementControls[elementType];
+
+    if (control) {
+      if (control.useParent)
+        return parentDomElement;
       const ret = control.construct
-            ? control.construct(elementType, parent)
+            ? control.construct(elementType, turtleElement, parentDomElement)
             : this.dom.createElement(control.domType || 'span');
 
       const className = "className" in control ? control.className : elementType;
       if (className)
         ret.classList.add(className);
 
-      parent.append(ret);
+      if (!_noAdd)
+        parentDomElement.append(ret);
       return ret;
     } else {
       const ret = this.dom.createElement('span');
       ret.classList.add(elementType);
-      parent.append(ret);
+      if (!_noAdd)
+        parentDomElement.append(ret);
       return ret;
     }
   }
