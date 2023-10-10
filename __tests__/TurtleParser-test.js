@@ -365,7 +365,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
          "type":"blankNodePropertyList",
          "startToken":{
            "type":"startBNode","origText": "[","ord": 0,
-           "term":{"termType":"BlankNode","value":"df_0_2"}
+           "term":{"termType":"BlankNode","value":"df_0_0"}
          },"ws1":[],"predicateObjectList":[
            {"type":"verb_objectList",
             "verb":{
@@ -374,7 +374,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
             "ws1":[],"objectList":[
               {"type": "blankNodePropertyList",
                "startToken": { "type": "startBNode", "origText": "[", "ord": 1,
-                  "term": { "termType": "BlankNode", "value": "df_0_3" } },
+                  "term": { "termType": "BlankNode", "value": "df_0_1" } },
                 "ws1": [],
                 "predicateObjectList": [
                    {"type":"verb_objectList",
@@ -401,7 +401,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
               "type":"blankNodePropertyList",
               "startToken":{
                 "type":"startBNode","origText": "[","ord": 2,
-                "term":{"termType":"BlankNode","value":"df_0_4"}
+                "term":{"termType":"BlankNode","value":"df_0_2"}
               },"ws1":[],"predicateObjectList":[
                 {"type":"verb_objectList",
                  "verb":{
@@ -411,7 +411,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
                    {"type": "blankNodePropertyList",
                     "startToken": {
                      "type": "startBNode", "origText": "[", "ord": 3,
-                        "term": { "termType": "BlankNode", "value": "df_0_5" } },
+                        "term": { "termType": "BlankNode", "value": "df_0_3" } },
                       "ws1": [],
                       "predicateObjectList": [
                         {"type":"verb_objectList",
@@ -432,21 +432,21 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
       },
       {"type":"token","origText":"."}
     ]}, quads:[
-      { "subject": { "termType": "BlankNode", "value": "df_0_3" },
+      { "subject": { "termType": "BlankNode", "value": "df_0_1" },
         "predicate": { "termType": "NamedNode", "value": "http://a.example/ns#p2" },
         "object": { "termType": "NamedNode", "value": "http://a.example/ns#o2" } },
-      { "subject": { "termType": "BlankNode", "value": "df_0_2" },
+      { "subject": { "termType": "BlankNode", "value": "df_0_0" },
         "predicate": { "termType": "NamedNode", "value": "http://a.example/ns#p1" },
-        "object": { "termType": "BlankNode", "value": "df_0_3" } },
-      { "subject": { "termType": "BlankNode", "value": "df_0_5" },
+        "object": { "termType": "BlankNode", "value": "df_0_1" } },
+      { "subject": { "termType": "BlankNode", "value": "df_0_3" },
         "predicate": { "termType": "NamedNode", "value": "http://a.example/ns#p5" },
         "object": { "termType": "NamedNode", "value": "http://a.example/ns#o5" } },
-      { "subject": { "termType": "BlankNode", "value": "df_0_4" },
-        "predicate": { "termType": "NamedNode", "value": "http://a.example/ns#p4" },
-        "object": { "termType": "BlankNode", "value": "df_0_5" } },
       { "subject": { "termType": "BlankNode", "value": "df_0_2" },
+        "predicate": { "termType": "NamedNode", "value": "http://a.example/ns#p4" },
+        "object": { "termType": "BlankNode", "value": "df_0_3" } },
+      { "subject": { "termType": "BlankNode", "value": "df_0_0" },
         "predicate": { "termType": "NamedNode", "value": "http://a.example/ns#p3" },
-        "object": { "termType": "BlankNode", "value": "df_0_4" } },
+        "object": { "termType": "BlankNode", "value": "df_0_2" } },
     ] },
   { label: "()<p>().", in: `()<p>().`, parseTree: {
     "statementList": [
@@ -485,18 +485,97 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
         "predicate": { "termType": "NamedNode", "value": "http://localhost/some/p" },
         "object": { "termType": "NamedNode", "value": Ns.rdf("nil") } },
     ] },
+  { label: "(<a><b>)<p>(<c><d>).", in: `(<a><b>)<p>(<c><d>).`, parseTree: {
+    "statementList": [
+      {
+        "type": "triples",
+        "subject": [
+          {
+            "type": "collection",
+            "startToken": {
+              "type": "startCollection",
+              "origText": "("
+            },
+            "elts": [
+              { "type": "relativeUrl", "value": "http://localhost/some/a", "ord": 0, "origText": "<a>",
+                "term": { "termType": "NamedNode", "value": "http://localhost/some/a" },
+                "li": { "termType": "BlankNode", "value": "df_0_0" } },
+              { "type": "relativeUrl", "value": "http://localhost/some/b", "ord": 1, "origText": "<b>",
+                "term": { "termType": "NamedNode", "value": "http://localhost/some/b" },
+                "li": { "termType": "BlankNode", "value": "df_0_1" } }
+            ],
+            "ws1": [],
+            "endToken": { "type": "endCollection", "origText": ")" },
+            "term": { "termType": "BlankNode", "value": "df_0_0" } }
+        ],
+        "ws1": [],
+        "predicateObjectList": [
+          { "type": "verb_objectList",
+            "verb": {
+              "type": "relativeUrl", "value": "http://localhost/some/p", "origText": "<p>",
+              "term": { "termType": "NamedNode", "value": "http://localhost/some/p" } },
+            "ws1": [],
+            "objectList": [
+              {
+                "type": "collection",
+                "startToken": { "type": "startCollection", "origText": "(" },
+                "elts": [
+                  { "type": "relativeUrl", "value": "http://localhost/some/c", "ord": 2, "origText": "<c>",
+                    "term": { "termType": "NamedNode", "value": "http://localhost/some/c" },
+                    "li": { "termType": "BlankNode", "value": "df_0_2" } },
+                  { "type": "relativeUrl", "value": "http://localhost/some/d", "ord": 3, "origText": "<d>",
+                    "term": { "termType": "NamedNode", "value": "http://localhost/some/d" },
+                    "li": { "termType": "BlankNode", "value": "df_0_3" } }
+                ],
+                "ws1": [],
+                "endToken": { "type": "endCollection", "origText": ")" },
+                "term": { "termType": "BlankNode", "value": "df_0_2" } }
+            ] }
+        ] },
+      { "type": "token", "origText": "." }
+    ] }, quads: [
+    { "subject": { "termType": "BlankNode", "value": "df_0_0" },
+      "predicate": { "termType": "NamedNode", "value": Ns.rdf("first") },
+      "object": { "termType": "NamedNode", "value": "http://localhost/some/a" } },
+    { "subject": { "termType": "BlankNode", "value": "df_0_0" },
+      "predicate": { "termType": "NamedNode", "value": Ns.rdf("rest") },
+      "object": { "termType": "BlankNode", "value": "df_0_1" } },
+    { "subject": { "termType": "BlankNode", "value": "df_0_1" },
+      "predicate": { "termType": "NamedNode", "value": Ns.rdf("first") },
+      "object": { "termType": "NamedNode", "value": "http://localhost/some/b" } },
+    { "subject": { "termType": "BlankNode", "value": "df_0_1" },
+      "predicate": { "termType": "NamedNode", "value": Ns.rdf("rest") },
+      "object": { "termType": "NamedNode", "value": Ns.rdf("nil") } },
+    { "subject": { "termType": "BlankNode", "value": "df_0_2" },
+      "predicate": { "termType": "NamedNode", "value": Ns.rdf("first") },
+      "object": { "termType": "NamedNode", "value": "http://localhost/some/c" } },
+    { "subject": { "termType": "BlankNode", "value": "df_0_2" },
+      "predicate": { "termType": "NamedNode", "value": Ns.rdf("rest") },
+      "object": { "termType": "BlankNode", "value": "df_0_3" } },
+    { "subject": { "termType": "BlankNode", "value": "df_0_3" },
+      "predicate": { "termType": "NamedNode", "value": Ns.rdf("first") },
+      "object": { "termType": "NamedNode", "value": "http://localhost/some/d" } },
+    { "subject": { "termType": "BlankNode", "value": "df_0_3" },
+      "predicate": { "termType": "NamedNode", "value": Ns.rdf("rest") },
+      "object": { "termType": "NamedNode", "value": Ns.rdf("nil") } },
+    { "subject": { "termType": "BlankNode", "value": "df_0_0" },
+      "predicate": { "termType": "NamedNode", "value": "http://localhost/some/p" },
+      "object": { "termType": "BlankNode", "value": "df_0_2" } }
+  ]},
   { label: "(())<p>(()).", in: `(())<p>(()).`, parseTree: {
     "statementList": [
       { "type": "triples",
         "subject": [
           { "type": "collection", "startToken": { "type": "startCollection", "origText": "(" },
             "elts": [
-              { "type": "collection",
+              { "type": "collection", "ord": 0,
                 "startToken": { "type": "startCollection", "origText": "(" },
                 "elts": [], "ws1": [], "endToken": { "type": "endCollection", "origText": ")" },
-                "term": { "termType": "NamedNode", "value": Ns.rdf("nil") } },
+                "term": { "termType": "NamedNode", "value": Ns.rdf("nil") },
+                "li": { "termType": "BlankNode", "value": "df_0_0" } },
             ],
-            "ws1": [], "endToken": { "type": "endCollection", "origText": ")" } }
+            "ws1": [], "endToken": { "type": "endCollection", "origText": ")" },
+            "term": { "termType": "BlankNode", "value": "df_0_0" } }
         ],
         "ws1": [],
         "predicateObjectList": [
@@ -509,33 +588,34 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
               { "type": "collection",
                 "startToken": { "type": "startCollection", "origText": "(" },
                 "elts": [
-                  { "type": "collection", "startToken": { "type": "startCollection", "origText": "(" },
+                  { "type": "collection", "startToken": { "type": "startCollection", "origText": "(" }, "ord": 1,
                     "elts": [],
                     "ws1": [], "endToken": { "type": "endCollection", "origText": ")" },
-                    "term": { "termType": "NamedNode", "value": Ns.rdf("nil") } },
+                    "term": { "termType": "NamedNode", "value": Ns.rdf("nil") },
+                    "li": { "termType": "BlankNode", "value": "df_0_1" } },
                 ],
-                "ws1": [],
-                "endToken": { "type": "endCollection", "origText": ")" } }
+                "ws1": [], "endToken": { "type": "endCollection", "origText": ")" },
+                "term": { "termType": "BlankNode", "value": "df_0_1" } }
             ] }
         ] },
       { "type": "token", "origText": "." }
     ]
-  }, TODO:[
-    { "subject": { "termType": "BlankNode", "value": "a" },
+  }, quads:[
+    { "subject": { "termType": "BlankNode", "value": "df_0_0" },
       "predicate": { "termType": "NamedNode", "value": Ns.rdf("first") },
       "object": { "termType": "NamedNode", "value": Ns.rdf("nil") } },
-    { "subject": { "termType": "BlankNode", "value": "a" },
+    { "subject": { "termType": "BlankNode", "value": "df_0_0" },
       "predicate": { "termType": "NamedNode", "value": Ns.rdf("rest") },
       "object": { "termType": "NamedNode", "value": Ns.rdf("nil") } },
-    { "subject": { "termType": "BlankNode", "value": "b" },
+    { "subject": { "termType": "BlankNode", "value": "df_0_1" },
       "predicate": { "termType": "NamedNode", "value": Ns.rdf("first") },
       "object": { "termType": "NamedNode", "value": Ns.rdf("nil") } },
-    { "subject": { "termType": "BlankNode", "value": "b" },
+    { "subject": { "termType": "BlankNode", "value": "df_0_1" },
       "predicate": { "termType": "NamedNode", "value": Ns.rdf("rest") },
       "object": { "termType": "NamedNode", "value": Ns.rdf("nil") } },
-    { "subject": { "termType": "BlankNode", "value": "a" },
+    { "subject": { "termType": "BlankNode", "value": "df_0_0" },
       "predicate": { "termType": "NamedNode", "value": "http://localhost/some/p" },
-      "object": { "termType": "BlankNode", "value": "b" } },
+      "object": { "termType": "BlankNode", "value": "df_0_1" } },
   ] },
   { label: "kitchen sink spaces", in: `
 #Spellings of directives
