@@ -23,6 +23,7 @@ describe('TurtleParser', () => {
       expect(parser.factory).toBeInstanceOf(DataFactory);
       // expect(parser.factory).toBe(null);
       const parseTree = parser.parse('<a> <b> <c> .');
+      parser.decorateRdfJs(parseTree);
       expect(parseTree).toEqual({
         "statementList": [
           { "type": "triples",
@@ -150,6 +151,7 @@ pre:s<#p><#o>.
           const rendered = origText(parseTree).join('');
           expect(rendered).toEqual(test.in);
           if (test.parseTree) { // console.log(JSON.stringify(parseTree))
+            parserWithFactory.decorateRdfJs(parseTree);
             expect(parseTree).toEqual(test.parseTree);
           }
           if (test.triples) { // console.log(JSON.stringify(quads))
