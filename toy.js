@@ -17,7 +17,7 @@ console.log('--------------------');
 const text = `<s><p>(<c>(<d>)).`
 const parseTree = parser.parse(text, baseIRI, {"g": "http://a.example/g#"});
 console.log('--------------------');
-parser.decorateRdfjs(parseTree);
+// parser.decorateRdfjs(parseTree);
 const orig = origText(parseTree).join('');
 if (orig === text)
   console.log('==')

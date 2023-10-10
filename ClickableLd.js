@@ -9,19 +9,12 @@ class UnexpectedType extends Error {
 class RenderClickableLd {
   static UseParent = ".";
 
-  constructor (dom, baseIRI, text, mediaType, elementControls = {}) {
+  constructor (dom, elementControls = {}) {
     this.dom = dom;
-    this.baseIRI = baseIRI;
-    this.text = text;
-    this.mediaType = mediaType;
     this.elementControls = elementControls;
   }
 
-  render (element) {
-    if (this.mediaType !== 'text/turtle')
-      throw Error(`media type ${this.mediaType} not supported; only "text/turtle" for now`);
-    const parser = new TurtleParser.TurtleParser({baseIRI: this.baseIRI});
-    const [parseTree, quads] = parser.parse(this.text);
+  render (parseTree, element) {
     // element.innerText = TurtleJisonContext.exports.origText(parseTree).join('');
     this.renderStatementList(parseTree.statementList, element);
   }
