@@ -17,10 +17,12 @@ const Ns = {
 describe('TurtleParser', () => {
   describe('construction', () => {
     it('should construct with no params', () => {
-      const parser = new TurtleParser();
+      const factory = new DataFactory();
+      const parser = new TurtleParser({factory});
       expect(parser.baseIRI).toBe(null);
       expect(parser.factory).toBeInstanceOf(DataFactory);
-      const [parseTree, quads] = parser.parse('<a> <b> <c> .');
+      // expect(parser.factory).toBe(null);
+      const parseTree = parser.parse('<a> <b> <c> .');
       expect(parseTree).toEqual({
         "statementList": [
           { "type": "triples",
@@ -42,20 +44,19 @@ describe('TurtleParser', () => {
           { "type": "token", "origText": "." }
         ]
       });
-      expect(quads).toEqual([
+      expect(parser.getQuads()).toEqual(quadlify(factory, [
         { "subject": { "termType": "NamedNode", "value": "a" },
           "predicate": { "termType": "NamedNode", "value": "b" },
-          "object": { "termType": "NamedNode", "value": "c" } }
-      ]);
+          "object": { "termType": "NamedNode", "value": "c" } },
+      ]));
     });
 
     it('should unescape', () => {
-      const parser = new TurtleParser()
-      expect(parser.baseIRI).toBe(null);
-      expect(parser.factory).toBeInstanceOf(DataFactory);
+      const factory = new DataFactory();
+      const parser = new TurtleParser({factory})
       const abc = '<a\\u0062\\U00000063>';
       const ghi = '"g\\u0068\\U00000069"';
-      const [parseTree, quads] = parser.parse(abc + ' <def> ' + ghi + ' .');
+      const parseTree = parser.parse(abc + ' <def> ' + ghi + ' .');
       const triple1 = parseTree.statementList[0];
       const s = triple1.subject;
       expect(s.value).toEqual("abc");
@@ -63,19 +64,19 @@ describe('TurtleParser', () => {
       const o = triple1.predicateObjectList[0].objectList[0];
       expect(o.String.value).toEqual("ghi");
       expect(o.String.origText).toEqual(ghi);
-      expect(quads).toEqual([
+      expect(parser.getQuads()).toEqual(quadlify(factory, [
         { "subject": { "termType": "NamedNode", "value": "abc" },
           "predicate": { "termType": "NamedNode", "value": "def" },
           "object": { "termType": "Literal", "value": "ghi", "language": "", "datatype": {
             "termType": "NamedNode",
             "value": Ns.xsd("string") } } }
-      ]);
+      ]));
     });
 
     it('should abort informatively on unknown lexical term', () => {
       const parser = new TurtleParser()
       expect(parser.baseIRI).toBe(null);
-      expect(parser.factory).toBeInstanceOf(DataFactory);
+      expect(parser.factory).toBe(null);
       try {
         const [parseTree, quads] = parser.parse('<a> <b> & .');
         throw Error('parse() should have thrown');
@@ -113,13 +114,14 @@ describe('TurtleParser', () => {
     });
 
     it('should reset', () => {
-      const parser = new TurtleParser()
+      const factory = new DataFactory();
+      const parser = new TurtleParser({factory})
       expect(parser.baseIRI).toBe(null);
       expect(parser.factory).toBeInstanceOf(DataFactory);
-      const [parseTree0] = parser.parse(`PREFIX pre: <http://a.example/ns#>
+      const parseTree0 = parser.parse(`PREFIX pre: <http://a.example/ns#>
 pre:s<#p><#o>.`);
       expect(parseTree0.statementList[2].subject.value).toEqual("http://a.example/ns#s");
-      const [parseTree1] = parser.parse('pre:s<#p><#o>.');
+      const parseTree1 = parser.parse('pre:s<#p><#o>.');
       expect(parseTree1.statementList[0].subject.value).toEqual("http://a.example/ns#s");
       parser.reset();
       expect(() => {
@@ -133,13 +135,14 @@ pre:s<#p><#o>.
   describe('coverage', () => {
     const baseIRI = 'http://localhost/some/path.ext'
     const factory = new DataFactory();
-    const parser = new TurtleParser({baseIRI, factory})
+    const parserWithFactory = new TurtleParser({baseIRI, factory})
+    const parserWithoutFactory = new TurtleParser({baseIRI})
 
     for (const test of getTests()) {
       if (!TESTS || test.label === TESTS || test.label.match(new RegExp(TESTS))) {
         it(`should parse ${test.label}`, () => {
-          parser.reset();
-          const [parseTree, quads] = parser.parse(test.in, test.base, test.prefixes);
+          parserWithFactory.reset();
+          const parseTree = parserWithFactory.parse(test.in, test.base, test.prefixes);
           if (DEBUG) {
             console.log("parseTree:", JSON.stringify(parseTree, null, 2));
             console.log("quads:", quads);
@@ -149,14 +152,19 @@ pre:s<#p><#o>.
           if (test.parseTree) { // console.log(JSON.stringify(parseTree))
             expect(parseTree).toEqual(test.parseTree);
           }
-          if (test.quads) { // console.log(JSON.stringify(quads))
-            expect(quads).toEqual(test.quads);
+          if (test.triples) { // console.log(JSON.stringify(quads))
+            const quads = parserWithFactory.getQuads();
+            expect(quads).toEqual(quadlify(factory, test.triples));
           }
         });
       }
     }
   });
 });
+
+function quadlify (factory, triples) {
+  return triples.map(t => factory.quad(t.subject, t.predicate, t.object));
+}
 
 function getTests () { return [
   { label: "empty", in: ``, parseTree: {statementList: []} },
@@ -190,7 +198,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
           ]}
        ]},
       {"type":"token","origText":"."},
-    ]}, quads:[
+    ]}, triples:[
       { "subject": { "termType": "NamedNode", "value": "http://a.example/ns#s" },
         "predicate": { "termType": "NamedNode", "value": "http://localhost/some/path.ext#p" },
         "object": { "termType": "NamedNode", "value": "http://localhost/some/path.ext#o" } }
@@ -212,7 +220,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
           ]}
        ]},
       {"type":"token","origText":"."}
-    ]}, quads:[
+    ]}, triples:[
       { "subject": { "termType": "NamedNode", "value": "http://a.example/ns#s" },
         "predicate": { "termType": "NamedNode", "value": "http://a.example/ns#p" },
         "object": { "termType": "NamedNode", "value": "http://a.example/ns#o" } }
@@ -235,7 +243,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
              "term":{"termType":"NamedNode","value":"http://a.example/ns#o2"}}
           ]}
        ]},{"type":"token","origText":"."}
-    ]}, quads:[
+    ]}, triples:[
       { "subject": { "termType": "NamedNode", "value": "http://a.example/ns#s" },
         "predicate": { "termType": "NamedNode", "value": "http://a.example/ns#p" },
         "object": { "termType": "NamedNode", "value": "http://a.example/ns#o1" } },
@@ -269,7 +277,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
           ]}
        ]},
       {"type":"token","origText":"."}
-    ]}, quads:[
+    ]}, triples:[
       { "subject": { "termType": "NamedNode", "value": "http://a.example/ns#s" },
         "predicate": { "termType": "NamedNode", "value": "http://a.example/ns#p1" },
         "object": { "termType": "NamedNode", "value": "http://a.example/ns#o1" } },
@@ -341,7 +349,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
        ]
       },
       {"type":"token","origText":"."}
-    ]}, quads:[
+    ]}, triples:[
       { "subject": { "termType": "BlankNode", "value": "df_0_0" },
         "predicate": { "termType": "NamedNode", "value": "http://a.example/ns#p1" },
         "object": { "termType": "NamedNode", "value": "http://a.example/ns#o1" } },
@@ -431,7 +439,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
        ]
       },
       {"type":"token","origText":"."}
-    ]}, quads:[
+    ]}, triples:[
       { "subject": { "termType": "BlankNode", "value": "df_0_1" },
         "predicate": { "termType": "NamedNode", "value": "http://a.example/ns#p2" },
         "object": { "termType": "NamedNode", "value": "http://a.example/ns#o2" } },
@@ -480,7 +488,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
         ] },
       { "type": "token", "origText": "." }
     ]
-  }, quads:[
+  }, triples:[
       { "subject": { "termType": "NamedNode", "value": Ns.rdf("nil") },
         "predicate": { "termType": "NamedNode", "value": "http://localhost/some/p" },
         "object": { "termType": "NamedNode", "value": Ns.rdf("nil") } },
@@ -533,7 +541,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
             ] }
         ] },
       { "type": "token", "origText": "." }
-    ] }, quads: [
+    ] }, triples: [
     { "subject": { "termType": "BlankNode", "value": "df_0_0" },
       "predicate": { "termType": "NamedNode", "value": Ns.rdf("first") },
       "object": { "termType": "NamedNode", "value": "http://localhost/some/a" } },
@@ -600,7 +608,7 @@ PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
         ] },
       { "type": "token", "origText": "." }
     ]
-  }, quads:[
+  }, triples:[
     { "subject": { "termType": "BlankNode", "value": "df_0_0" },
       "predicate": { "termType": "NamedNode", "value": Ns.rdf("first") },
       "object": { "termType": "NamedNode", "value": Ns.rdf("nil") } },

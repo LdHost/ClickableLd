@@ -4,7 +4,7 @@ const {DataFactory} = require('rdf-data-factory');
 
 const baseIRI = 'http://localhost/some/path.ext'
 const factory = new DataFactory();
-const parser = new TurtleParser({baseIRI, factory})
+const parser = new TurtleParser({baseIRI})
 
 console.log('--------------------');
 // const text = `PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<p>_:o,[<p1><o1>],(),(1),1,"1","1"^^<http://www.w3.org/2001/XMLSchema#integer>,"1"@en,true.`;
@@ -15,7 +15,7 @@ console.log('--------------------');
 // const text = `[<#p1>[<#p2><#o2>]]<#p3>[<#p4>[<#p5><#o5>]].`;
 // const text = `(())<p>(()).`
 const text = `<s><p>(<c>(<d>)).`
-const [parseTree, quads] = parser.parse(text, baseIRI, {"g": "http://a.example/g#"});
+const parseTree = parser.parse(text, baseIRI, {"g": "http://a.example/g#"});
 console.log('--------------------');
 const orig = origText(parseTree).join('');
 if (orig === text)
@@ -23,4 +23,4 @@ if (orig === text)
 else
   console.log("!=\n" + text + "\n--\n" + orig + "---");
 console.log(JSON.stringify(parseTree, null, 2));
-console.log(JSON.stringify(quads, null, 2));
+console.log(JSON.stringify(parser.getQuads(), null, 2));

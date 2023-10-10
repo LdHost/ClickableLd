@@ -128,7 +128,7 @@ PNAME_LN                {PNAME_NS} {PN_LOCAL}
 
 {ANON}                  yytext = yy.createBlankNode("ANON", yytext); return 'ANON';
 {IRIREF}                yytext = yy.createRelativeIri(yytext); return 'IRIREF';
-{PNAME_LN}              yytext = yy.parsePName(yytext); return 'PNAME_LN';
+{PNAME_LN}              yytext = yy.createPrefixedIri(yytext); return 'PNAME_LN';
 {PNAME_NS}              yytext = yy.parsePrefix(yytext); return 'PNAME_NS';
 {BLANK_NODE_LABEL}      yytext = yy.createBlankNode("BLANK_NODE_LABEL", yytext); return 'BLANK_NODE_LABEL';
 {DOUBLE}                yytext = { type: "DOUBLE",  value: yytext, origText: yytext }; return 'DOUBLE';
