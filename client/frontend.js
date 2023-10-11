@@ -1,9 +1,12 @@
-
 const Elts = {
   pageInput: document.querySelector('#page input'),
   renderElement: document.querySelector('.clickable'),
   messagesList: document.querySelector('#messages ol'),
+  popup: document.querySelector('#popup-window'),
+  popupContents: document.querySelector('#popup-window p'),
 };
+
+let HpJson = null;
 
 const QS = document.querySelector.bind(document);
 const QSA = document.querySelectorAll.bind(document);
@@ -106,6 +109,19 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
     });
   } else if (neighbor) {
     element.classList.add("neighbor");
+  } else {
+
+    if (targetUrlStr.startsWith('http://purl.obolibrary.org/obo/HP_')) {
+      if (HpJson === null) {
+        HpJson = fetch("https://github.com/obophenotype/human-phenotype-ontology/releases/latest/download/hp.json")
+          .then(resp => resp.text())
+          .then(text => JSON.parse(text).graphs[0].nodes)
+          .catch(e => {console.log(e instanceof Error); throw e;});
+      }
+      HpJson
+        .then(nodes => popup(element, JSON.stringify((nodes.find(n => n.id === targetUrlStr)))))
+        .catch(e => popup(element, e.message.substring(0, 10)));
+    }
   }
   parentDomElement.append(element);
   element.addEventListener('click', async evt => {
@@ -115,6 +131,20 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
   });
   // element.addEventListener('click', (event) => event.preventDefault());
   return element;
+}
+
+function popup (element, text) {
+  element.addEventListener('mouseover', async evt => {
+    Object.assign(Elts.popup.style, {
+      left: `${evt.pageX + element.scrollLeft - element.offsetLeft}px`,
+      top:  `${evt.pageY + element.scrollTop - element.offsetTop}px`,
+      display: `block`,
+    });
+    Elts.popupContents.innerText = text;
+  });
+  element.addEventListener("mouseout", function() {
+    Elts.popup.style.display = "none";
+  });
 }
 
 function message (content) {
