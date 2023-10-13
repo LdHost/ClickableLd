@@ -124,6 +124,9 @@ class DereferenceSchema {
 }
 // extensionList.add(new DereferenceSchema(location)); // should be at bottom as it accepts everything
 
+const BROWSE_PARAM = 'browse';
+let Interface = null;
+
 const Elts = {
   pageInput: document.querySelector('#page input'),
   renderElement: document.querySelector('.clickable'),
@@ -136,6 +139,7 @@ const Elts = {
 
 // window.addEventListener("load", onLoad);
 document.addEventListener("DOMContentLoaded", onLoad);
+window.addEventListener("popstate", onLoad);
 
 function log (className, msg) {
   const li = document.createElement('li');
@@ -146,8 +150,10 @@ function log (className, msg) {
 
 async function onLoad (evt) {
   Elts.pageInput.oninput = inputDoc;
+  Interface = new URL(location);
+  Interface.search = Interface.hash = '';
   const params = new URLSearchParams(location.search);
-  const browse = params.get('browse');
+  const browse = params.get(BROWSE_PARAM);
   if (browse) {
     Elts.pageInput.value = browse;
     inputDoc.call(Elts.pageInput, evt);
@@ -208,9 +214,9 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
   const referrUrl = new URL(referrer);
   const targetUrl = new URL(turtleElement.value);
   const targetUrlStr = targetUrl.href;
-  const neighbor = referrUrl.protocol === targetUrl.protocol
+  const isNeighbor = referrUrl.protocol === targetUrl.protocol
         && referrUrl.host === targetUrl.host;
-  const inDoc = neighbor
+  const inDoc = isNeighbor
         && referrUrl.pathname === targetUrl.pathname
         && referrUrl.search === targetUrl.search;
   const element = document.createElement('a');
@@ -233,7 +239,7 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
       for (const cousin of elements)
         cousin.classList.remove("highlighted");
     });
-  } else if (neighbor) {
+  } else if (isNeighbor) {
     element.classList.add("neighbor");
   } else {
     const title = TurtleJisonContext.exports.origText(turtleElement).join('');
@@ -242,8 +248,17 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
   parentDomElement.append(element);
   element.addEventListener('click', async evt => {
     // evt.stopPropagation();
-    // if (!inDoc) return; // follow link
-    evt.preventDefault();
+    if (inDoc) {
+      true; // flash elts
+    } else if (isNeighbor) {
+      const browseUrl = new URL(Interface);
+      browseUrl.search = `${BROWSE_PARAM}=${targetUrl.pathname}`;
+      history.pushState(null, null, browseUrl);
+      renderDoc(targetUrlStr, referrUrl.href);
+      evt.preventDefault();
+    } else {
+      // allow default to follow link
+    }
   });
   // element.addEventListener('click', (event) => event.preventDefault());
   return element;
