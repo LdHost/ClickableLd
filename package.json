@@ -16,6 +16,7 @@
     "rdf-data-factory": "^1.1.2"
   },
   "devDependencies": {
+    "@comunica/query-sparql-rdfjs": "^2.9.0",
     "@rollup/plugin-commonjs": "^25.0.5",
     "@rollup/plugin-node-resolve": "^15.2.2",
     "@ts-jison/parser-generator": "^0.4.1-alpha.2",

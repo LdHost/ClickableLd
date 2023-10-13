@@ -66,20 +66,26 @@
       #page input { width: 90%; }
       #messages { width: 40%; position: fixed; right: 1em; top: 20%; }
       .highlighted { background-color: #eef; }
-      #popup-window {
-          position: fixed;
-          width: 300px;
-          height: 200px;
-          background: white;
-          border: 1px solid black;
-          padding: 10px;
+      .popup {
+          position: absolute;
+          background: gold;
+          border: .5em solid #efc700;
+          visibility: hidden;
+          pointer-events: none;
+          min-width: 100px;
+          padding: 1rem;
+      }
+
+      .popup.is-active {
+          visibility: visible;
+          pointer-events: auto;
+      }
+
+      .popup > * {
           margin: 0;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          z-index: 10;
-          display: none;
+      }
+      .invisible {
+          visibility: hidden;
       }
     </style>
     <script>globalThis.module = {}</script>
@@ -96,17 +102,17 @@
     <div>
       <pre class="clickable">
       </pre>
+      <div id="popup-window" class="popup">
+        <h3 class="title">Title here</h3>
+        <p class="label">Name here.</p>
+        <p class="definition">Definition here.</p>
+      </div>
     </div>
     <div id="messages">
       <div>
         <h2 style="float:left; margin: 0;">Messages</h2><p style="float:left; padding-top: 1.3ex; padding-left: .5em; margin: 0;">(most recent first)</p><div style="clear:both"/>
       </div>
       <ol reversed="reversed"></ol>
-    </div>
-    <div id="popup-window">
-      <h1>Pop-up Window</h1>
-      <p>This is a pop-up window.</p>
-      <button id="close-button">Close</button>
     </div>
     <script src="./frontend.js"></script>
   </body>

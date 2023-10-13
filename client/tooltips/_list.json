@@ -1,0 +1,13 @@
+[
+  {"label": "Human Physiology Ontology", "namespace": "http://purl.obolibrary.org/obo/HP_",    "url": "hp.json",      "exec": "gen-hp.js",      "args": ["https://github.com/obophenotype/human-phenotype-ontology/releases/latest/download/hp.json", "hp.json"]},
+  {"label": "Data Catalog Vocabulary",   "namespace": "http://www.w3.org/ns/dcat#",            "url": "dcat.json",    "exec": "grep-schema.js", "args": ["http://www.w3.org/ns/dcat", "dcat.json"]},
+  {"label": "Linked Data Platform",      "namespace": "http://www.w3.org/ns/ldp#",             "url": "ldp.json",     "exec": "grep-schema.js", "args": ["http://www.w3.org/ns/ldp", "ldp.json"]},
+  {"label": "RDFS",                      "namespace": "http://www.w3.org/2000/01/rdf-schema#", "url": "rdfs.json",    "exec": "grep-schema.js", "args": ["http://www.w3.org/2000/01/rdf-schema", "rdfs.json"]},
+  {"label": "Dublin Core terms",         "namespace": "http://purl.org/dc/terms/",             "url": "dcterms.json", "exec": "grep-schema.js", "args": ["http://purl.org/dc/terms/", "dcterms.json"]},
+  {"label": "Friend of a Friend",        "namespace": "http://xmlns.com/foaf/0.1/",            "url": "foaf.json",    "exec": "grep-schema.js", "args": ["https://gist.githubusercontent.com/baskaufs/fefa1bfbff14a9efc174/raw/389e4b003ef5cbd6901dd8ab8a692b501bc9370e/foaf.ttl", "foaf.json"]},
+  {"label": "Fair Data Point Ontology",  "namespace": "https://w3id.org/fdp/fdp-o#" },
+  {"label": "Orphanet Ontology",         "namespace": "http://www.orpha.net/ORDO/" },
+  {"label": "OBO Foundry Ontology",      "namespace": "http://purl.obolibrary.org/obo/" }
+]
+
+

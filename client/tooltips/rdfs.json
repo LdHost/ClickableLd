@@ -1,0 +1,17 @@
+{
+"http://www.w3.org/2000/01/rdf-schema#Resource":{"type":"class","label":"Resource","definition":"The class resource, everything."},
+"http://www.w3.org/2000/01/rdf-schema#Class":{"type":"class","label":"Class","definition":"The class of classes."},
+"http://www.w3.org/2000/01/rdf-schema#Literal":{"type":"class","label":"Literal","definition":"The class of literal values, eg. textual strings and integers."},
+"http://www.w3.org/2000/01/rdf-schema#Container":{"type":"class","label":"Container","definition":"The class of RDF containers."},
+"http://www.w3.org/2000/01/rdf-schema#ContainerMembershipProperty":{"type":"class","label":"ContainerMembershipProperty","definition":"The class of container membership properties, rdf:_1, rdf:_2, ...,\n                    all of which are sub-properties of 'member'."},
+"http://www.w3.org/2000/01/rdf-schema#Datatype":{"type":"class","label":"Datatype","definition":"The class of RDF datatypes."},
+"http://www.w3.org/2000/01/rdf-schema#isDefinedBy":{"type":"property","label":"isDefinedBy","definition":"The defininition of the subject resource."},
+"http://www.w3.org/2000/01/rdf-schema#label":{"type":"property","label":"label","definition":"A human-readable name for the subject."},
+"http://www.w3.org/2000/01/rdf-schema#comment":{"type":"property","label":"comment","definition":"A description of the subject resource."},
+"http://www.w3.org/2000/01/rdf-schema#subClassOf":{"type":"property","label":"subClassOf","definition":"The subject is a subclass of a class."},
+"http://www.w3.org/2000/01/rdf-schema#range":{"type":"property","label":"range","definition":"A range of the subject property."},
+"http://www.w3.org/2000/01/rdf-schema#domain":{"type":"property","label":"domain","definition":"A domain of the subject property."},
+"http://www.w3.org/2000/01/rdf-schema#subPropertyOf":{"type":"property","label":"subPropertyOf","definition":"The subject is a subproperty of a property."},
+"http://www.w3.org/2000/01/rdf-schema#seeAlso":{"type":"property","label":"seeAlso","definition":"Further information about the subject resource."},
+"http://www.w3.org/2000/01/rdf-schema#member":{"type":"property","label":"member","definition":"A member of the subject resource."}
+}
