@@ -241,6 +241,12 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
     });
   } else if (isNeighbor) {
     element.classList.add("neighbor");
+    const poList = parentDomElement.parentElement.parentElement.parentElement
+    if (poList.classList.contains("predicateObjectList")) {
+      const verb = poList.querySelector(".verb");
+      if (verb)
+        verb.classList.add("has-neighbor");
+    }
   } else {
     const title = TurtleJisonContext.exports.origText(turtleElement).join('');
     extensionList.findOwner(targetUrlStr, element, title, popup);

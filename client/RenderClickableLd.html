@@ -4,68 +4,29 @@
     <title>RenderClickableLd</title>
     <style>
       @import url('https://fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext');
-      body { /* padding: 50px; */ font-family: Lato; }
-      pre { display: flex; }
-      /*
-      body {
-      padding: 50px;
-      font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-      }
-      
-      a {
-          color: #00B7FF;
-      }
-      
-      table {
-          border-collapse:collapse;
-          text-align:center;
-      }
-      
-      caption {
-          caption-side:bottom;
-          font-weight:bold;
-          font-style:italic;
-          margin:4px;
-      }
-      
-      table,th, td {
-          border: 1px solid gray;
-      }
-      
-      th, td {
-          height: 24px;
-          padding:0 2em;
-          vertical-align:top;
-      }
-      
-      .repo { background-color: #ffd }
-      .commit { background-color: #dff }
-      .progress { background-color: #ddf }
-      .success { background-color: #dfd }
-      .error { background-color: #fdd }
-      .rowtitle { font-weight:bold; }
-      td { text-align: left; }
-      // th { background-image:url(table-shaded.png); }
 
-      td button {
-          font-size: 1ex;
-          padding: 0 0.5em;
-      }
-      */
-      .prefix { color: #228b22; }
-      .prefix {font-size: smaller;}
-      .base {font-size: smaller;}
-      .keyword, .a {color: #a020f0;}
+      /* Element rules */
+      body                 { /* padding: 50px; */ font-family: Lato; }
+      pre                  { display: flex; }
+
+      /* Turtle structure styles */
+      .prefix              { color: #228b22; font-size: smaller; }
+      .base                { font-size: smaller; }
+      .keyword, .a         { color: #a020f0; }
       .pname, .relativeUrl { text-decoration: none; }
-      .relativeUrl { color: #0000ff; }
-      .internalOverride { color: #777700 }
-      .neighbor { color: #555500 }
-      .string { color: #8b2252; }
-      .localName { color: #008b8b; }
-      #page { width: 40%; position: absolute; right: 1em; }
-      #page input { width: 90%; }
-      #messages { width: 40%; position: fixed; right: 1em; top: 20%; }
-      .highlighted { background-color: #eef; }
+      .relativeUrl         { color: #0000ff; }
+      .internalOverride    { color: #777700; }
+      .neighbor            { color: #555500; text-decoration: underline; }
+      .has-neighbor        { background-color: #f7f7d0; text-decoration: underline; }
+      .string              { color: #8b2252; }
+      .localName           { color: #008b8b; }
+      .comment             { color: #e24444; }
+
+      /* fancy stuff */
+      .highlighted         { background-color: #dfd; }
+      .popup > *           { margin: 0; }
+      .invisible           { visibility: hidden; }
+      .popup.is-active     { visibility: visible; pointer-events: auto; }
       .popup {
           position: absolute;
           background: gold;
@@ -76,17 +37,9 @@
           padding: 1rem;
       }
 
-      .popup.is-active {
-          visibility: visible;
-          pointer-events: auto;
-      }
-
-      .popup > * {
-          margin: 0;
-      }
-      .invisible {
-          visibility: hidden;
-      }
+      #page                { width: 40%; position: absolute; right: 1em; }
+      #page input          { width: 90%; }
+      #messages            { width: 40%; position: fixed; right: 1em; top: 20%; }
     </style>
     <script>globalThis.module = {}</script>
     <script src="./build/TurtleParser-bundle.js"></script>
