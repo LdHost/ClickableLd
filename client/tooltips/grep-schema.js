@@ -37,7 +37,7 @@ async function main () {
   process.stdout.write(`writing ${store.size} triples to ${OUTFILE}`);
   const lines = []
         .concat(await queryType(store, "rdfs:Class", "class"))
-        .concat(await queryType(store, "rdf:Property", "property"))
+        .concat(await queryType(store, "rdf:Property", "property"));
 
   Fs.writeFileSync(OUTFILE, "{\n" + lines.join(",\n") + "\n}");
   t1 = new Date();

@@ -126,6 +126,10 @@ class DereferenceSchema {
 
 const BROWSE_PARAM = 'browse';
 let Interface = null;
+let VisitedDocs = null;
+let VisitedTreeRoot = null;
+const VisitedTreeIds = new Set();
+let VisitedTree = null;
 
 const Elts = {
   pageInput: document.querySelector('#page input'),
@@ -135,11 +139,17 @@ const Elts = {
   popupTitle: document.querySelector('#popup-window h3'),
   popupLabel: document.querySelector('#popup-window .label'),
   popupDefinition: document.querySelector('#popup-window .definition'),
+  visitedTree: document.querySelector('#visited-tree'),
 };
 
 // window.addEventListener("load", onLoad);
 document.addEventListener("DOMContentLoaded", onLoad);
-window.addEventListener("popstate", onLoad);
+window.addEventListener("popstate", popState);
+
+async function popState (evt) {
+  onLoad(evt);
+//  VisitedTree = new Tree('#visited-tree', {data: [VisitedDocs]});
+}
 
 function log (className, msg) {
   const li = document.createElement('li');
@@ -153,16 +163,16 @@ async function onLoad (evt) {
   Interface = new URL(location);
   Interface.search = Interface.hash = '';
   const params = new URLSearchParams(location.search);
-  const browse = params.get(BROWSE_PARAM);
-  if (browse) {
-    Elts.pageInput.value = browse;
+  const docUrlStr = params.get(BROWSE_PARAM);
+  if (docUrlStr) {
+    Elts.pageInput.value = docUrlStr;
     inputDoc.call(Elts.pageInput, evt);
   }
 }
 
 async function inputDoc (evt) {
   if (this.value)
-    renderDoc(this.value, document.location.href);
+    renderDoc(this.value, new URL(document.location));
 }
 
 async function renderDoc (urlStr, oldBase) {
@@ -204,6 +214,85 @@ async function renderDoc (urlStr, oldBase) {
   }).render(parseTree, Elts.renderElement);
 
   document.title = urlStr;
+
+  if (!VisitedTreeIds.has(docBase.href)) {
+    let text = null;
+    const targetSegments = docBase.pathname.split('/').slice(1); // skip leading empty segment
+    const renderFrom = new URL('/', docBase);
+    if (VisitedTreeRoot === null) {
+      // First entry rendered so no root
+      text = targetSegments.pop();
+      renderFrom.pathname = targetSegments.join('/');
+      VisitedTreeRoot = new URL(renderFrom);
+      VisitedDocs = {
+        id: renderFrom.href,
+        text: renderFrom.href,
+        children: [{
+          id: docBase.href,
+          text: text,
+        }]
+      };
+    } else {
+      const rootSegments = VisitedTreeRoot.pathname.split('/').slice(1); // skip leading empty segment
+      const docSegments = docBase.pathname.split('/').slice(1);
+      if (docBase.href.startsWith(VisitedTreeRoot.href)) {
+        // Fits underneath current root
+        const addMe = docSegments.slice(rootSegments.length);
+        text = addMe.pop();
+        let node = VisitedDocs;
+        let next;
+        // walk the nodes they have in common
+        while ((next = node.children.find(n => n.text === addMe[0]))) {
+          node = next;
+          addMe.shift();
+        }
+        // extend with any remaining addMe (dirs in the docBase)
+        while (addMe.length) {
+          const dirName = addMe.shift();
+          next = { id: node.id + '/' + dirName, text: dirName, children: [] };
+          node.children.push(next);
+          node = next;
+        }
+        node.children.push({id: node.id + '/' + text, text: text});
+      } else {
+        // Need to push current root up
+        let firstDiff = 0;
+        while (rootSegments[firstDiff] === docSegments[firstDiff])
+          ++firstDiff;
+        if (firstDiff === 0) throw Error('special-case when at root');
+        const newRootIdx = firstDiff - 1;
+
+        // Old root now gets a dirname
+        VisitedDocs.text = rootSegments[rootSegments.length - 1];
+        // walk backwards up the tree
+        for (let iAdding = rootSegments.length - 1; iAdding > newRootIdx; --iAdding) {
+          const targetSegments = rootSegments.slice(0, iAdding); // CHECK
+          renderFrom.pathname = targetSegments.join('/');
+          VisitedDocs = {
+            id: renderFrom.href,
+            text: iAdding === newRootIdx + 1 ? renderFrom.href : rootSegments[iAdding - 1],
+            children: [VisitedDocs],
+          };
+        }
+        VisitedTreeRoot = new URL(renderFrom);
+        let node = VisitedDocs;
+        let next;
+        const addMe = docSegments.slice(newRootIdx+1);
+        const text = addMe.pop();
+        // extend with any remaining addMe (dirs in the docBase)
+        while (addMe.length > 0) {
+          const dirName = addMe.shift();
+          next = { id: node.id + '/' + dirName, text: dirName, children: [] };
+          node.children.push(next);
+          node = next;
+        }
+        node.children.push({id: node.id + '/' + text, text: text});
+      }
+    }
+    VisitedTree = new Tree('#visited-tree', {data: [VisitedDocs]}); // Elts.visitedTree
+    VisitedTreeIds.add(docBase.href);
+  }
+  VisitedTree.values = [docBase.href];
 }
 
 const InternalLinks = new Map();
@@ -260,7 +349,7 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
       const browseUrl = new URL(Interface);
       browseUrl.search = `${BROWSE_PARAM}=${targetUrl.pathname}`;
       history.pushState(null, null, browseUrl);
-      renderDoc(targetUrlStr, referrUrl.href);
+      renderDoc(targetUrlStr, referrUrl);
       evt.preventDefault();
     } else {
       // allow default to follow link

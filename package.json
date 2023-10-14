@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "@ts-jison/parser": "^0.4.1-alpha.1",
+    "@widgetjs/tree": "^1.8.3",
     "rdf-data-factory": "^1.1.2"
   },
   "devDependencies": {

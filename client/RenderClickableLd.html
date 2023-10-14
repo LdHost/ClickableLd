@@ -41,8 +41,9 @@
       #page input          { width: 90%; }
       #messages            { width: 40%; position: fixed; right: 1em; top: 20%; }
     </style>
-    <script>globalThis.module = {}</script>
+    <script>globalThis.module = {};globalThis.process = {env: {NODE_ENV: 'production999'} };</script>
     <script src="./build/TurtleParser-bundle.js"></script>
+    <script src="../node_modules/@widgetjs/tree/dist/tree.js"></script>
     <script src="./frontend-config.js"></script>
     <script src="../ClickableLd.js"></script>
   </head>
@@ -65,6 +66,7 @@
       <div>
         <h2 style="float:left; margin: 0;">Messages</h2><p style="float:left; padding-top: 1.3ex; padding-left: .5em; margin: 0;">(most recent first)</p><div style="clear:both"/>
       </div>
+      <div id="visited-tree"></div>
       <ol reversed="reversed"></ol>
     </div>
     <script src="./frontend.js"></script>
