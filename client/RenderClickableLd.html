@@ -6,7 +6,7 @@
       @import url('https://fonts.googleapis.com/css?family=Lato&subset=latin,latin-ext');
 
       /* Element rules */
-      body                 { /* padding: 50px; */ font-family: Lato; }
+      body                 { /* padding: 50px; */ font-family: Lato; background-color: #f7f7f3; }
       pre                  { display: flex; }
 
       /* Turtle structure styles */
@@ -42,6 +42,8 @@
       #page                { width: 40%; position: absolute; right: 1em; }
       #page input          { width: 90%; }
       #messages            { display: none; width: 40%; position: fixed; right: 1em; top: 20%; }
+      #referrer            { text-decoration: none; }
+      #lastError           { display: none; }
     </style>
     <script>globalThis.module = {};globalThis.process = {env: {NODE_ENV: 'production999'} };</script>
     <script src="./build/TurtleParser-bundle.js"></script>
@@ -57,6 +59,10 @@
       <div id="visited-tree"></div>
     </nav>
     <div>
+      <div id="last-error">
+        <pre></pre>
+        <div></div>
+      </div>
       <pre class="clickable">
       </pre>
       <div id="popup-window" class="popup">
