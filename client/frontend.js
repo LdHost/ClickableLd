@@ -125,13 +125,13 @@ class DereferenceSchema {
 // extensionList.add(new DereferenceSchema(location)); // should be at bottom as it accepts everything
 
 const BROWSE_PARAM = 'browse';
-let Interface = null;
-let VisitedDocs = null;
-let VisitedTreeRoot = null;
-const VisitedTreeIds = new Set();
-let VisitedTree = null;
+let this_Interface = null;
+let this_VisitedDocs = null;
+let this_VisitedTreeRoot = null;
+const this_VisitedTreeIds = new Set();
+let this_VisitedTree = null;
 
-const Elts = {
+const this_Elts = {
   pageInput: document.querySelector('#page input'),
   renderElement: document.querySelector('.clickable'),
   messagesList: document.querySelector('#messages ol'),
@@ -148,7 +148,7 @@ window.addEventListener("popstate", popState);
 
 async function popState (evt) {
   onLoad(evt);
-//  VisitedTree = new Tree('#visited-tree', {data: [VisitedDocs]});
+//  this_VisitedTree = new Tree('#visited-tree', {data: [this_VisitedDocs]});
 }
 
 function log (className, msg) {
@@ -159,14 +159,14 @@ function log (className, msg) {
 }
 
 async function onLoad (evt) {
-  Elts.pageInput.oninput = inputDoc;
-  Interface = new URL(location);
-  Interface.search = Interface.hash = '';
+  this_Elts.pageInput.oninput = inputDoc;
+  this_Interface = new URL(location);
+  this_Interface.search = this_Interface.hash = '';
   const params = new URLSearchParams(location.search);
   const docUrlStr = params.get(BROWSE_PARAM);
   if (docUrlStr) {
-    Elts.pageInput.value = docUrlStr;
-    inputDoc.call(Elts.pageInput, evt);
+    this_Elts.pageInput.value = docUrlStr;
+    inputDoc.call(this_Elts.pageInput, evt);
   }
 }
 
@@ -182,8 +182,8 @@ async function renderDoc (urlStr, oldBase) {
   if (!resp.ok)
     throw Error(`fetch(${urlStr}) => ${resp.code}:\n${body}`);
 
-  message(` ${new URL(urlStr, oldBase).href}`);
-  Elts.renderElement.replaceChildren(); // clear out rendering area
+  // message(`-> ${new URL(urlStr, oldBase).href}`);
+  this_Elts.renderElement.replaceChildren(); // clear out rendering area
 
   const contentType = resp.headers.get("Content-Type");
   if (contentType && contentType !== 'text/turtle')
@@ -211,20 +211,20 @@ async function renderDoc (urlStr, oldBase) {
     simpleLiteral: { className: "literal" },
     datatypedLiteral: { className: "literal" },
     langTagLiteral: { className: "literal" },
-  }).render(parseTree, Elts.renderElement);
+  }).render(parseTree, this_Elts.renderElement);
 
   document.title = urlStr;
 
-  if (!VisitedTreeIds.has(docBase.href)) {
+  if (!this_VisitedTreeIds.has(docBase.href)) {
     let text = null;
     const targetSegments = docBase.pathname.split('/').slice(1); // skip leading empty segment
     const renderFrom = new URL('/', docBase);
-    if (VisitedTreeRoot === null) {
+    if (this_VisitedTreeRoot === null) {
       // First entry rendered so no root
       text = targetSegments.pop();
       renderFrom.pathname = targetSegments.join('/');
-      VisitedTreeRoot = new URL(renderFrom);
-      VisitedDocs = {
+      this_VisitedTreeRoot = new URL(renderFrom);
+      this_VisitedDocs = {
         id: renderFrom.href,
         text: renderFrom.href,
         children: [{
@@ -233,13 +233,13 @@ async function renderDoc (urlStr, oldBase) {
         }]
       };
     } else {
-      const rootSegments = VisitedTreeRoot.pathname.split('/').slice(1); // skip leading empty segment
+      const rootSegments = this_VisitedTreeRoot.pathname.split('/').slice(1); // skip leading empty segment
       const docSegments = docBase.pathname.split('/').slice(1);
-      if (docBase.href.startsWith(VisitedTreeRoot.href)) {
+      if (docBase.href.startsWith(this_VisitedTreeRoot.href)) {
         // Fits underneath current root
         const addMe = docSegments.slice(rootSegments.length);
         text = addMe.pop();
-        let node = VisitedDocs;
+        let node = this_VisitedDocs;
         let next;
         // walk the nodes they have in common
         while ((next = node.children.find(n => n.text === addMe[0]))) {
@@ -263,19 +263,19 @@ async function renderDoc (urlStr, oldBase) {
         const newRootIdx = firstDiff - 1;
 
         // Old root now gets a dirname
-        VisitedDocs.text = rootSegments[rootSegments.length - 1];
+        this_VisitedDocs.text = rootSegments[rootSegments.length - 1];
         // walk backwards up the tree
         for (let iAdding = rootSegments.length - 1; iAdding > newRootIdx; --iAdding) {
           const targetSegments = rootSegments.slice(0, iAdding); // CHECK
           renderFrom.pathname = targetSegments.join('/');
-          VisitedDocs = {
+          this_VisitedDocs = {
             id: renderFrom.href,
             text: iAdding === newRootIdx + 1 ? renderFrom.href : rootSegments[iAdding - 1],
-            children: [VisitedDocs],
+            children: [this_VisitedDocs],
           };
         }
-        VisitedTreeRoot = new URL(renderFrom);
-        let node = VisitedDocs;
+        this_VisitedTreeRoot = new URL(renderFrom);
+        let node = this_VisitedDocs;
         let next;
         const addMe = docSegments.slice(newRootIdx+1);
         const text = addMe.pop();
@@ -289,14 +289,13 @@ async function renderDoc (urlStr, oldBase) {
         node.children.push({id: node.id + '/' + text, text: text});
       }
     }
-    VisitedTree = new Tree('#visited-tree', {data: [VisitedDocs]}); // Elts.visitedTree
-    VisitedTreeIds.add(docBase.href);
+    this_VisitedTree = new Tree('#visited-tree', {data: [this_VisitedDocs]}); // this_Elts.visitedTree
+    this_VisitedTreeIds.add(docBase.href);
   }
-  VisitedTree.values = [docBase.href];
+  this_VisitedTree.values = [docBase.href];
 }
 
-const InternalLinks = new Map();
-const el = (sel, par) => (par||document).querySelector(sel);
+const this_InternalLinks = new Map();
 let elPopup;
 
 function makeLink (referrer, elementType, turtleElement, parentDomElement) {
@@ -313,10 +312,10 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
   if (isSameDoc) {
     element.classList.add("internalOverride");
     let elements = null;
-    if (InternalLinks.has(targetUrlStr)) {
-      elements = InternalLinks.get(targetUrlStr);
+    if (this_InternalLinks.has(targetUrlStr)) {
+      elements = this_InternalLinks.get(targetUrlStr);
     } else {
-      InternalLinks.set(targetUrlStr, (elements = []));
+      this_InternalLinks.set(targetUrlStr, (elements = []));
     }
     elements.push(element);
 
@@ -336,6 +335,7 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
       if (verb)
         verb.classList.add("has-neighbor");
     }
+    testLink(targetUrl, element); // no reason to await this
   } else {
     const title = TurtleJisonContext.exports.origText(turtleElement).join('');
     extensionList.findOwner(targetUrlStr, element, title, popup);
@@ -350,14 +350,21 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
       let idx = siblings.indexOf(element);
       if (++idx > siblings.length -1) idx = 0;
 
-      // flash that sibling to draw attention to it
+      // scroll to see next sibling
       focusOn(siblings[idx]);
+
+      // flash that sibling to draw attention to it
+      siblings.forEach(elt => flash(elt));
       evt.preventDefault();
     } else if (isNeighbor) {
-      const browseUrl = new URL(Interface);
+      const browseUrl = new URL(this_Interface);
       browseUrl.search = `${BROWSE_PARAM}=${targetUrl.pathname}`;
       history.pushState(null, null, browseUrl);
-      renderDoc(targetUrlStr, referrUrl);
+      renderDoc(targetUrlStr, referrUrl).catch(e => {
+        const pre = document.createElement('pre');
+        pre.innerText = e.message;
+        this_Elts.renderElement.replaceChildren(pre);
+      });
       evt.preventDefault();
     } else {
       // allow default to follow link
@@ -367,10 +374,31 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
   return element;
 }
 
+async function testLink (targetUrl, element) {
+  try {
+    const resp = await fetch(targetUrl, {headers: {redirect: 'follow', accept: 'text/turtle'} });
+    const body = await resp.text();
+    if (!resp.ok) {
+      element.classList.add('error');
+      element.title = body;
+    } else {
+      const ct = resp.headers.get('content-type');
+      if (!ct) {
+        element.classList.add('warning');
+        element.title = `no Content-Type`;
+      } else if (!ct.startsWith('text/turtle')) {
+        element.classList.add('warning');
+        element.title = `can't use Content-Type ${ct}`;
+      }
+    }
+  } catch (e) {
+    element.classList.add('error');
+    element.title = e.message;
+  }
+}
+
 function focusOn (domElement) {
-  /// goto next sibling
   domElement.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
-  flash(domElement);
 }
 
 function flash (domElement) {
@@ -393,9 +421,9 @@ function popup (element, title, text, definition) {
   element.dataset.popup="#popup-window";
 
   element.addEventListener('mouseover', async evt => {
-    elTarget = element;
-    elPopup = Elts.popup;
-    elParent = Elts.popup.parentElement;
+    const elTarget = element;
+    elPopup = this_Elts.popup;
+    const elParent = this_Elts.popup.parentElement;
 
     // Position:
     const absX = evt.clientX + window.scrollX;
@@ -416,27 +444,27 @@ function popup (element, title, text, definition) {
       top: `${y}px`,
     });
 
-    Elts.popupTitle.innerText = title;
+    this_Elts.popupTitle.innerText = title;
     if (definition) { // don't show both label and definition
-      Elts.popupLabel.classList.add(CssClass_invisible);
-      Elts.popupDefinition.innerText = typeof text === 'function' ? await definition() : definition;
-      Elts.popupDefinition.classList.remove(CssClass_invisible);
+      this_Elts.popupLabel.classList.add(CssClass_invisible);
+      this_Elts.popupDefinition.innerText = typeof text === 'function' ? await definition() : definition;
+      this_Elts.popupDefinition.classList.remove(CssClass_invisible);
     } else {
-      Elts.popupDefinition.classList.add(CssClass_invisible);
-      Elts.popupLabel.innerText = typeof text === 'function' ? await text() : text;
-      Elts.popupLabel.classList.remove(CssClass_invisible);
+      this_Elts.popupDefinition.classList.add(CssClass_invisible);
+      this_Elts.popupLabel.innerText = typeof text === 'function' ? await text() : text;
+      this_Elts.popupLabel.classList.remove(CssClass_invisible);
     }
 
     elPopup.classList.add("is-active");
   });
   element.addEventListener("mouseout", function() {
-    // Elts.popup.style.display = "none";
-    Elts.popup.classList.remove("is-active");
+    // this_Elts.popup.style.display = "none";
+    this_Elts.popup.classList.remove("is-active");
   });
 }
 
 function message (content) {
   const li = document.createElement('li');
   li.append(content);
-  Elts.messagesList.append(li);
+  this_Elts.messagesList.append(li);
 }
