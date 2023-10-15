@@ -305,12 +305,12 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
   const targetUrlStr = targetUrl.href;
   const isNeighbor = referrUrl.protocol === targetUrl.protocol
         && referrUrl.host === targetUrl.host;
-  const inDoc = isNeighbor
+  const isSameDoc = isNeighbor
         && referrUrl.pathname === targetUrl.pathname
         && referrUrl.search === targetUrl.search;
   const element = document.createElement('a');
   element.setAttribute('href', turtleElement.value);
-  if (inDoc) {
+  if (isSameDoc) {
     element.classList.add("internalOverride");
     let elements = null;
     if (InternalLinks.has(targetUrlStr)) {
@@ -343,8 +343,16 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
   parentDomElement.append(element);
   element.addEventListener('click', async evt => {
     // evt.stopPropagation();
-    if (inDoc) {
-      true; // flash elts
+    if (isSameDoc) {
+
+      // find next element referring to the same target
+      const siblings = [...document.querySelectorAll(`[href="${evt.target.href}"]`)];
+      let idx = siblings.indexOf(element);
+      if (++idx > siblings.length -1) idx = 0;
+
+      // flash that sibling to draw attention to it
+      focusOn(siblings[idx]);
+      evt.preventDefault();
     } else if (isNeighbor) {
       const browseUrl = new URL(Interface);
       browseUrl.search = `${BROWSE_PARAM}=${targetUrl.pathname}`;
@@ -357,6 +365,26 @@ function makeLink (referrer, elementType, turtleElement, parentDomElement) {
   });
   // element.addEventListener('click', (event) => event.preventDefault());
   return element;
+}
+
+function focusOn (domElement) {
+  /// goto next sibling
+  domElement.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
+  flash(domElement);
+}
+
+function flash (domElement) {
+  const origBackground = domElement.style.backgroundColor;
+  domElement.style.backgroundColor = "#fc9";
+  setTimeout(() => {
+    domElement.style.backgroundColor = origBackground;
+    setTimeout(() => {
+      domElement.style.backgroundColor = "#fc9";
+      setTimeout(() => {
+        domElement.style.backgroundColor = origBackground;
+      }, 200);
+    }, 250);
+  }, 300);
 }
 
 const CssClass_invisible = "invisible";

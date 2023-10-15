@@ -10,7 +10,7 @@
       pre                  { display: flex; }
 
       /* Turtle structure styles */
-      .prefix              { color: #228b22; font-size: smaller; }
+      .prefix              { color: #228b22; }
       .base                { font-size: smaller; }
       .keyword, .a         { color: #a020f0; }
       .pname, .relativeUrl { text-decoration: none; }
@@ -39,7 +39,7 @@
 
       #page                { width: 40%; position: absolute; right: 1em; }
       #page input          { width: 90%; }
-      #messages            { width: 40%; position: fixed; right: 1em; top: 20%; }
+      #messages            { display: none; width: 40%; position: fixed; right: 1em; top: 20%; }
     </style>
     <script>globalThis.module = {};globalThis.process = {env: {NODE_ENV: 'production999'} };</script>
     <script src="./build/TurtleParser-bundle.js"></script>
@@ -49,10 +49,11 @@
   </head>
   <body>
     <!-- <h1>Sites</h1> -->
-    <div id="page">
-      <h2>Location</h2>
+    <nav id="page">
+      <h2>Navigate</h2>
       <a id="referrer" href="">♁</a><input></input>
-    </div>
+      <div id="visited-tree"></div>
+    </nav>
     <div>
       <pre class="clickable">
       </pre>
@@ -66,7 +67,6 @@
       <div>
         <h2 style="float:left; margin: 0;">Messages</h2><p style="float:left; padding-top: 1.3ex; padding-left: .5em; margin: 0;">(most recent first)</p><div style="clear:both"/>
       </div>
-      <div id="visited-tree"></div>
       <ol reversed="reversed"></ol>
     </div>
     <script src="./frontend.js"></script>
