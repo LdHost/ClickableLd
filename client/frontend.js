@@ -162,6 +162,16 @@ class FrontEnd {
     // window.addEventListener("load", onLoad);
     document.addEventListener("DOMContentLoaded", this.onLoad.bind(this));
     window.addEventListener("popstate", this.popState.bind(this));
+
+    this.fetchWorkerReady = new Promise((resolve, reject) => {
+      window.addEventListener("fetchworkerready", readyEvent => resolve(readyEvent));
+    });
+
+    navigator.serviceWorker.register("fetchworker.js").then(
+      _=> navigator.serviceWorker.controller
+        ? window.dispatchEvent(new CustomEvent("fetchworkerready")) // normal reload
+        : navigator.serviceWorker.ready.then(_=> location.reload()) // first load or Ctrl+F5
+    );
   }
 
   async popState (evt) {
@@ -176,7 +186,8 @@ class FrontEnd {
     document.querySelector('#messages').prepend(li);
   }
 
-  onLoad (evt) {
+  async  onLoad (evt) {
+    await this.fetchWorkerReady;
     const _FrontEnd = this;
     async function inputDoc (evt) {
       if (evt.target.value)
@@ -412,9 +423,11 @@ class FrontEnd {
     try {
       const resp = await fetch(targetUrl, {headers: {redirect: 'follow', accept: 'text/turtle'} });
       const body = await resp.text();
-      if (!resp.ok) {
+      const status = resp.headers.get('X-Status') || resp.status;
+      if (status >= 400) {
+        // console.log([[targetUrl.href, status], ...resp.headers.entries()]);
         element.classList.add('error');
-        element.title = body;
+        element.title = `GET got ${status}`;
       } else {
         const ct = resp.headers.get('content-type');
         if (!ct) {
