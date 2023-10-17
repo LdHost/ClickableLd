@@ -145,6 +145,7 @@ class FrontEnd {
     this.VisitedTreeIds = new Set();
     this.VisitedTree = null;
     this.InternalLinks = new Map();
+    this.quads = null;
 
     this.Elts = {
       pageInput: document.querySelector('#page input'),
@@ -230,8 +231,9 @@ class FrontEnd {
     if (contentType && contentType !== 'text/turtle')
       throw Error(`media type ${contentType} not supported; only "text/turtle" for now`);
 
-    const parser = new TurtleParser.TurtleParser({baseIRI: docBase.href});
+    const parser = new TurtleParser.TurtleParser({baseIRI: docBase.href, factory: new DataFactory()});
     const parseTree = parser.parse(body);
+    this.quads = [...parser.getQuads()];
 
     await extensionList.ready();
     new RenderClickableLd(document, {
@@ -300,7 +302,7 @@ class FrontEnd {
           let firstDiff = 0;
           while (rootSegments[firstDiff] === docSegments[firstDiff])
             ++firstDiff;
-          if (firstDiff === 0) throw Error('special-case when at root');
+          if (firstDiff === 0) throw Error('special-case when at root -- please reproduce this behavior and describe that in a detailed bug repot ');
           const newRootIdx = firstDiff - 1;
 
           // Old root now gets a dirname
@@ -340,6 +342,7 @@ class FrontEnd {
     const referrUrl = new URL(referrer);
     const targetUrl = new URL(turtleElement.value);
     const targetUrlStr = targetUrl.href;
+    const describedInThisDoc = this.quads.find(q => q.subject.value === targetUrlStr);
     const isNeighbor = referrUrl.protocol === targetUrl.protocol
           && referrUrl.host === targetUrl.host;
     const isSameDoc = isNeighbor
@@ -347,7 +350,7 @@ class FrontEnd {
           && referrUrl.search === targetUrl.search;
     const element = document.createElement('a');
     element.setAttribute('href', turtleElement.value);
-    if (isSameDoc) {
+    if (isSameDoc || describedInThisDoc) {
       element.classList.add("internalOverride");
       let elements = null;
       if (this.InternalLinks.has(targetUrlStr)) {
@@ -365,6 +368,8 @@ class FrontEnd {
         for (const cousin of elements)
           cousin.classList.remove("highlighted");
       });
+      if (!isSameDoc)
+        this.testLink(targetUrl, element, 'warning'); // no reason to await this
     } else if (isNeighbor) {
       element.classList.add("neighbor");
       const poList = parentDomElement.parentElement.parentElement.parentElement
@@ -373,7 +378,7 @@ class FrontEnd {
         if (verb)
           verb.classList.add("has-neighbor");
       }
-      this.testLink(targetUrl, element); // no reason to await this
+      this.testLink(targetUrl, element, 'error'); // no reason to await this
     } else {
       const title = TurtleJisonContext.exports.origText(turtleElement).join('');
       extensionList.findOwner(targetUrlStr, element, title, this.popup.bind(this));
@@ -381,7 +386,7 @@ class FrontEnd {
     parentDomElement.append(element);
     element.addEventListener('click', async evt => {
       // evt.stopPropagation();
-      if (isSameDoc) {
+      if (isSameDoc || describedInThisDoc) {
 
         // find next element referring to the same target
         const siblings = [...document.querySelectorAll(`[href="${evt.target.href}"]`)];
@@ -419,14 +424,15 @@ class FrontEnd {
     }
   }
 
-  async testLink (targetUrl, element) {
+  async testLink (targetUrl, element, code4xx) {
     try {
       const resp = await fetch(targetUrl, {headers: {redirect: 'follow', accept: 'text/turtle'} });
       const body = await resp.text();
       const status = resp.headers.get('X-Status') || resp.status;
       if (status >= 400) {
         // console.log([[targetUrl.href, status], ...resp.headers.entries()]);
-        element.classList.add('error');
+        if (targetUrl.href === 'https://w3id.org/ejp-rd/fairdatapoints/wp13/distribution/2f833bc7-9f14-4c96-b181-664b37c7a015/metrics/445c0a70d1e214e545b261559e2842f4') console.log('HERE', code4xx);
+        element.classList.add(code4xx);
         element.title = `GET got ${status}`;
       } else {
         const ct = resp.headers.get('content-type');
@@ -439,7 +445,7 @@ class FrontEnd {
         }
       }
     } catch (e) {
-      element.classList.add('error');
+      element.classList.add(code4xx);
       element.title = e.message;
     }
   }
