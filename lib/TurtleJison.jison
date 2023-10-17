@@ -191,24 +191,23 @@ statement:
 ;
 
 directive:
-      prefixID	
-    | base	
+      n3Prefix	
+    | n3Base	
     | sparqlPrefix	
     | sparqlBase	
 ;
 
-prefixID:
+n3Prefix:
       PREFIX WSS PNAME_NS WSS IRIREF WSS GT_DOT	{
         yy._prefixes[$3.value] = $5.value;
-        $$ = [{ "type": "prefix", keyword: $1, ws1: $2, prefix: $3, ws2: $4, namespace: $5, ws3: $6, dot: $7 }];
+        $$ = [{ "type": "n3Prefix", keyword: $1, ws1: $2, prefix: $3, ws2: $4, namespace: $5, ws3: $6, dot: $7 }];
       }
 ;
 
-base:
+n3Base:
       BASE WSS IRIREF WSS GT_DOT	{
-        yy._setBase(yy._base === null ||
-                    absoluteIRI.test($3.value.slice(1, -1)) ? $3.value.slice(1, -1) : yy._resolveIRI($3.value.slice(1, -1)));
-        $$ = [{ "type": "base", keyword: $1, ws1: $2, base: $3, ws2: $4, dot: $5 }];
+        yy._setBase($3.value);
+        $$ = [{ "type": "n3Base", keyword: $1, ws1: $2, base: $3, ws2: $4, dot: $5 }];
       }
 ;
 
@@ -221,8 +220,7 @@ sparqlPrefix:
 
 sparqlBase:
       SPARQL_BASE WSS IRIREF	{
-        yy._setBase(yy._base === null ||
-                    absoluteIRI.test($3.value.slice(1, -1)) ? $3.value.slice(1, -1) : yy._resolveIRI($3.value.slice(1, -1)));
+        yy._setBase($3.value);
         $$ = [{ "type": "sparqlBase", keyword: $1, ws1: $2, base: $3 }];
       }
 ;

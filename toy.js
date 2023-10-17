@@ -14,7 +14,11 @@ console.log('--------------------');
 // const text = `PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`
 // const text = `[<#p1>[<#p2><#o2>]]<#p3>[<#p4>[<#p5><#o5>]].`;
 // const text = `(())<p>(()).`
-const text = `<s><p>(<c>(<d>)).`
+// const text = `<s><p>(<c>(<d>)).`
+const text = `
+BASE/*a*/<http://localhost/some/path.ext>/*b*/
+PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/
+@prefix/*a*/:/*b*/<http://a.example/ns#>/*c*/.pre:s<#p><#o>.`;
 const parseTree = parser.parse(text, baseIRI, {"g": "http://a.example/g#"});
 console.log('--------------------');
 // parser.decorateRdfjs(parseTree);

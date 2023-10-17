@@ -63,6 +63,28 @@ class RenderClickableLd {
     return ret;
   }
 
+  renderN3Prefix (n3Prefix, element) {
+    const ret = this.span("n3Prefix", n3Prefix, element);
+    this.renderKeyword(n3Prefix.keyword, ret);
+    this.renderSkippedList(n3Prefix.ws1, ret);
+    this.renderPrefix(n3Prefix.prefix, ret);
+    this.renderSkippedList(n3Prefix.ws2, ret);
+    this.renderNamespace(n3Prefix.namespace, ret);
+    this.renderSkippedList(n3Prefix.ws3, ret);
+    this.renderToken(n3Prefix.dot, ret);
+    return ret;
+  }
+
+  renderN3Base (n3Base, element) {
+    const ret = this.span("n3Base", n3Base, element);
+    this.renderKeyword(n3Base.keyword, ret);
+    this.renderSkippedList(n3Base.ws1, ret);
+    this.renderBase(n3Base.base, ret);
+    this.renderSkippedList(n3Base.ws2, ret);
+    this.renderToken(n3Base.dot, ret);
+    return ret;
+  }
+
   renderSparqlPrefix (sparqlPrefix, element) {
     const ret = this.span("sparqlPrefix", sparqlPrefix, element);
     this.renderKeyword(sparqlPrefix.keyword, ret);
@@ -73,9 +95,23 @@ class RenderClickableLd {
     return ret;
   }
 
+  renderSparqlBase (sparqlBase, element) {
+    const ret = this.span("sparqlBase", sparqlBase, element);
+    this.renderKeyword(sparqlBase.keyword, ret);
+    this.renderSkippedList(sparqlBase.ws1, ret);
+    this.renderBase(sparqlBase.base, ret);
+    return ret;
+  }
+
   renderPrefix (prefix, element) {
     const ret = this.span("prefix", prefix, element);
     ret.innerText = prefix.origText; // or value + ':'
+    return ret;
+  }
+
+  renderBase (base, element) {
+    const ret = this.span("base", base, element);
+    this.renderTerm(base, ret); // renderIriForm?
     return ret;
   }
 

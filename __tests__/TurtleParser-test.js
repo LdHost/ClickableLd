@@ -166,40 +166,81 @@ function quadlify (factory, triples) {
 
 function getTests () { return [
   { label: "empty", in: ``, parseTree: {statementList: []} },
-  { label: "prefix", in: `
-PREFIX/*a*/pre:/*b*/<http://a.example/ns#>/*c*/pre:s<#p><#o>.`, parseTree:
+  { label: "directives", in: `
+BASE/*a*/</another/>/*b*/
+PREFIX/*a*/pre:/*b*/</ns#>/*c*/
+@base/*a*/<path.ext>/*b*/./*c*/
+@prefix/*a*/:/*b*/<http://absolute.prefix.example/ns#>/*c*/.pre:s<#p>:o .`, parseTree:
     {"statementList":[
       {"type":"ws","origText":"\n"},
+
+      {"type":"sparqlBase","keyword":{"type":"KEYWORD","origText":"BASE"},
+       "ws1":[{"type":"comment","origText":"/*a*/"}],
+       "base":{
+         "type":"relativeUrl","value":"http://localhost/another/","origText":"</another/>",
+         "term":{"termType":"NamedNode","value":"http://localhost/another/"}}
+      },
+      {"type":"comment","origText":"/*b*/"},
+      {"type":"ws","origText":"\n"},
+
       {"type":"sparqlPrefix","keyword":{"type":"KEYWORD","origText":"PREFIX"},
        "ws1":[{"type":"comment","origText":"/*a*/"}],
        "prefix":{"type":"prefix","value":"pre","origText":"pre:"},
        "ws2":[{"type":"comment","origText":"/*b*/"}],
        "namespace":{
-         "type":"relativeUrl","value":"http://a.example/ns#","origText":"<http://a.example/ns#>",
-         "term":{"termType":"NamedNode","value":"http://a.example/ns#"}}
+         "type":"relativeUrl","value":"http://localhost/ns#","origText":"</ns#>",
+         "term":{"termType":"NamedNode","value":"http://localhost/ns#"}}
       },
       {"type":"comment","origText":"/*c*/"},
+      {"type":"ws","origText":"\n"},
+
+      {"type":"n3Base","keyword":{"type":"KEYWORD","origText":"@base"},
+       "ws1":[{"type":"comment","origText":"/*a*/"}],
+       "base":{
+         "type":"relativeUrl","value":"http://localhost/another/path.ext","origText":"<path.ext>",
+         "term":{"termType":"NamedNode","value":"http://localhost/another/path.ext"}},
+       "ws2":[{"type":"comment","origText":"/*b*/"}],
+       "dot":{"type":"token","origText":"."}
+      },
+      {"type":"comment","origText":"/*c*/"},
+      {"type":"ws","origText":"\n"},
+
+      {"type":"n3Prefix","keyword":{"type":"KEYWORD","origText":"@prefix"},
+       "ws1":[{"type":"comment","origText":"/*a*/"}],
+       "prefix":{"type":"prefix","value":"","origText":":"},
+       "ws2":[{"type":"comment","origText":"/*b*/"}],
+       "namespace":{
+         "type":"relativeUrl","value":"http://absolute.prefix.example/ns#","origText":"<http://absolute.prefix.example/ns#>",
+         "term":{"termType":"NamedNode","value":"http://absolute.prefix.example/ns#"}},
+       "ws3":[{"type":"comment","origText":"/*c*/"}],
+       "dot":{"type":"token","origText":"."}
+      },
       {"type":"triples",
        "subject":{
-         "type": "pname","value":"http://a.example/ns#s",
+         "type": "pname","value":"http://localhost/ns#s",
          "prefix": {"type": "prefix", "value": "pre", "origText": "pre:"},
          "localName": { "type": "localName", "value": "s", "origText": "s" },
-         "term": { "termType": "NamedNode", "value": "http://a.example/ns#s" },
+         "term": { "termType": "NamedNode", "value": "http://localhost/ns#s" },
        },"ws1":[],"predicateObjectList":[
          {"type":"verb_objectList",
           "verb":{
-            "type":"relativeUrl","value":"http://localhost/some/path.ext#p","origText":"<#p>",
-            "term":{"termType":"NamedNode","value":"http://localhost/some/path.ext#p"}},
+            "type":"relativeUrl","value":"http://localhost/another/path.ext#p","origText":"<#p>",
+            "term":{"termType":"NamedNode","value":"http://localhost/another/path.ext#p"}},
           "ws1":[],"objectList":[
-            {"type":"relativeUrl","value":"http://localhost/some/path.ext#o","origText":"<#o>",
-             "term":{"termType":"NamedNode","value":"http://localhost/some/path.ext#o"}}
+            {
+              "type": "pname","value":"http://absolute.prefix.example/ns#o",
+              "prefix": {"type": "prefix", "value": "", "origText": ":"},
+              "localName": { "type": "localName", "value": "o", "origText": "o" },
+              "term": { "termType": "NamedNode", "value": "http://absolute.prefix.example/ns#o" },
+            },
+            {"type":"ws","origText":" "}
           ]}
        ]},
-      {"type":"token","origText":"."},
+      {"type":"token","origText":"."}
     ]}, triples:[
-      { "subject": { "termType": "NamedNode", "value": "http://a.example/ns#s" },
-        "predicate": { "termType": "NamedNode", "value": "http://localhost/some/path.ext#p" },
-        "object": { "termType": "NamedNode", "value": "http://localhost/some/path.ext#o" } }
+      { "subject": { "termType": "NamedNode", "value": "http://localhost/ns#s" },
+        "predicate": { "termType": "NamedNode", "value": "http://localhost/another/path.ext#p" },
+        "object": { "termType": "NamedNode", "value": "http://absolute.prefix.example/ns#o" } }
     ] },
   { label: "spo", in: `<#s><#p><#o>.`, base: 'http://a.example/ns', parseTree:
     {"statementList":[
