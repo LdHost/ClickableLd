@@ -255,6 +255,21 @@ class FrontEnd {
     }
   }
 
+  hijackIndex (docBase, body) {
+    this.Elts.lastError.style.display = '';
+    this.Elts.renderElement.style.display = 'none';
+    this.Elts.lastError.querySelector('pre').innerText = "hijacking index for our nefarious purposes";
+    this.Elts.lastError.querySelector('div').innerHTML = body;
+    [...this.Elts.lastError.querySelectorAll('div a')].forEach(a => {
+      const browse = new URL(a.getAttribute('href'), docBase).href;
+      if (browse.startsWith(docBase.href)) { // only in-dir links
+        const i = new URL(this.Interface);
+        i.search = new URLSearchParams({browse})
+        a.href = i.href;
+      }
+    });
+  }
+
   async renderDoc (urlStr, oldBase) {
     const docBase = new URL(urlStr, oldBase);
     const resp = await fetch(docBase);
@@ -270,6 +285,8 @@ class FrontEnd {
     this.Elts.renderElement.style.display = '';
 
     const contentType = resp.headers.get("Content-Type");
+    if (contentType && contentType.startsWith('text/html'))
+      return this.hijackIndex(docBase, body);
     if (contentType && contentType !== 'text/turtle')
       throw Error(`media type ${contentType} not supported; only "text/turtle" for now`);
 
