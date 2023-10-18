@@ -134,8 +134,48 @@ class HttpError extends Error {
   }
 }
 
+const SHORTEN_PARAM = 'shorten';
 const BROWSE_PARAM = 'browse';
 const CssClass_invisible = "invisible";
+
+class MyRenderClickable extends RenderClickableLd {
+
+  constructor (dom, docBase, frontend, makeLink) {
+    super(dom, {
+      sparqlPrefix: {useParent: true},
+      skipped: {useParent: true},
+      namespace: {useParent: true},
+      statementOrWs: {useParent: true},
+      BuiltInDatatype: {useParent: true},
+
+      pname: { construct: makeLink },
+      relativeUrl: { construct: makeLink },
+      BLANK_NODE_LABEL: { className: "bnode" },
+      ANON: { className: "bnode" },
+      // blankNodePropertyList: { className: "blankNodePropertyList123" },
+      "blankNodePropertyList/start": { className: "bnode" },
+      "blankNodePropertyList/end": { className: "bnode" },
+      collection: { className: "bnode" },
+      simpleLiteral: { className: "literal" },
+      datatypedLiteral: { className: "literal" },
+      langTagLiteral: { className: "literal" },
+    });
+    this.docBase = docBase;
+    this.frontend = frontend;
+  }
+
+  renderRelativeUrl (relativeUrl, element) {
+    if (!this.frontend.shorten)
+      return super.renderRelativeUrl(relativeUrl, element);
+
+    const ret = this.span("relativeUrl", relativeUrl, element);
+    const calculated = '<' + RelativizeUrl.relativize(relativeUrl.value, this.docBase.href) + '>';
+    ret.innerText = calculated.length < relativeUrl.origText.length
+      ? calculated
+      : relativeUrl.origText;
+    return ret;
+  }
+}
 
 class FrontEnd {
   constructor () {
@@ -206,6 +246,8 @@ class FrontEnd {
     this.Interface = new URL(location);
     this.Interface.search = this.Interface.hash = '';
     const params = new URLSearchParams(location.search);
+    const shorten = params.get(SHORTEN_PARAM);
+    this.shorten = shorten && ['', 'false', '0', 'no'].indexOf(shorten) === -1;
     const docUrlStr = params.get(BROWSE_PARAM);
     if (docUrlStr) {
       this.Elts.pageInput.value = docUrlStr;
@@ -236,25 +278,7 @@ class FrontEnd {
     this.quads = [...parser.getQuads()];
 
     await extensionList.ready();
-    new RenderClickableLd(document, {
-      sparqlPrefix: {useParent: true},
-      skipped: {useParent: true},
-      namespace: {useParent: true},
-      statementOrWs: {useParent: true},
-      BuiltInDatatype: {useParent: true},
-
-      pname: { construct: this.makeLink.bind(this, docBase) },
-      relativeUrl: { construct: this.makeLink.bind(this, docBase) },
-      BLANK_NODE_LABEL: { className: "bnode" },
-      ANON: { className: "bnode" },
-      // blankNodePropertyList: { className: "blankNodePropertyList123" },
-      "blankNodePropertyList/start": { className: "bnode" },
-      "blankNodePropertyList/end": { className: "bnode" },
-      collection: { className: "bnode" },
-      simpleLiteral: { className: "literal" },
-      datatypedLiteral: { className: "literal" },
-      langTagLiteral: { className: "literal" },
-    }).render(parseTree, this.Elts.renderElement);
+    new MyRenderClickable(document, docBase, this, this.makeLink.bind(this, docBase)).render(parseTree, this.Elts.renderElement);
 
     document.title = urlStr;
 
@@ -381,7 +405,21 @@ class FrontEnd {
       this.testLink(targetUrl, element, 'error'); // no reason to await this
     } else {
       const title = TurtleJisonContext.exports.origText(turtleElement).join('');
-      extensionList.findOwner(targetUrlStr, element, title, this.popup.bind(this));
+      const x = extensionList.findOwner(targetUrlStr, element, title, this.popup.bind(this));
+      if (!x) {
+        element.addEventListener('mouseover', async evt => {
+          const popupWindow = window.open(targetUrlStr, 'Some Title?', 'width=800,height=400')
+          if (popupWindow) {
+            // popupWindow.focus();
+            popupWindow.moveTo(evt.pageX, evt.pageY);
+            popupWindow.addEventListener('mouseout', async evt => {
+              popupWindow.close();
+            });
+          }
+        });
+
+        element.setAttribute('target', "_blank");
+      }
     }
     parentDomElement.append(element);
     element.addEventListener('click', async evt => {
@@ -401,7 +439,8 @@ class FrontEnd {
         evt.preventDefault();
       } else if (isNeighbor) {
         const browseUrl = new URL(this.Interface);
-        browseUrl.search = `${BROWSE_PARAM}=${targetUrl.pathname}`;
+        const shortenStr = this.shorten ? `${SHORTEN_PARAM}=true&` : '';
+        browseUrl.search = `${shortenStr}${BROWSE_PARAM}=${targetUrl.pathname}`;
         history.pushState(null, null, browseUrl);
         this.renderDoc(targetUrlStr, referrUrl).catch(e => this.showError(e));
         evt.preventDefault();
