@@ -441,7 +441,7 @@ class FrontEnd {
     parentDomElement.append(element);
     element.addEventListener('click', async evt => {
       // evt.stopPropagation();
-      if (isSameDoc || describedInThisDoc) {
+      if (isSameDoc) {
 
         // find next element referring to the same target
         const siblings = [...document.querySelectorAll(`[href="${evt.target.href}"]`)];
