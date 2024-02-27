@@ -376,7 +376,7 @@ iri:
 
 PrefixedName:
       PNAME_LN	
-    | PNAME_NS	
+    | PNAME_NS	{ $$ = yy.createPrefixedIri($1.origText); }
 ;
 
 BlankNode:

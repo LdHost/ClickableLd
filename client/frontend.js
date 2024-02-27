@@ -287,7 +287,7 @@ class FrontEnd {
     const contentType = resp.headers.get("Content-Type");
     if (contentType && contentType.startsWith('text/html'))
       return this.hijackIndex(docBase, body);
-    if (contentType && contentType !== 'text/turtle')
+    if (contentType && !contentType.startsWith('text/turtle'))
       throw Error(`media type ${contentType} not supported; only "text/turtle" for now`);
 
     const parser = new TurtleParser.TurtleParser({baseIRI: docBase.href, factory: new DataFactory()});
@@ -428,7 +428,7 @@ class FrontEnd {
           const popupWindow = window.open(targetUrlStr, 'Some Title?', 'width=800,height=400')
           if (popupWindow) {
             // popupWindow.focus();
-            popupWindow.moveTo(evt.pageX, evt.pageY);
+            // popupWindow.moveTo(evt.pageX, evt.pageY);
             popupWindow.addEventListener('mouseout', async evt => {
               popupWindow.close();
             });
